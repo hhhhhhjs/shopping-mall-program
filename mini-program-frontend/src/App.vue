@@ -1,9 +1,22 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { navigateToInterceptor } from '@/router/interceptor'
+import { useTokenStore } from '@/store/token'
 
 onLaunch((options) => {
   console.log('App.vue onLaunch', options)
+
+  // 入口登录检查：未登录则跳转到个人中心
+  const tokenStore = useTokenStore()
+  tokenStore.updateNowTime()
+
+  if (!tokenStore.hasLogin) {
+    console.log('[App] 未登录，跳转到个人中心')
+    // 延迟执行，确保页面初始化完成
+    setTimeout(() => {
+      uni.switchTab({ url: '/pages/user/user' })
+    }, 100)
+  }
 })
 onShow((options) => {
   console.log('App.vue onShow', options)

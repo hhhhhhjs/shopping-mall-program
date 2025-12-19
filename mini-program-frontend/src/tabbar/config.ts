@@ -34,8 +34,8 @@ export const nativeTabbarList: NativeTabBarItem[] = [
   {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
-    pagePath: 'pages/me/me',
-    text: '个人',
+    pagePath: 'pages/user/user',
+    text: '个人中心',
   },
 ]
 
@@ -50,8 +50,8 @@ export const customTabbarList: CustomTabBarItem[] = [
     // badge: 'dot',
   },
   {
-    pagePath: 'pages/me/me',
-    text: '我的',
+    pagePath: 'pages/user/user',
+    text: '个人中心',
     iconType: 'unocss',
     icon: 'i-carbon-user',
     // badge: 10,
