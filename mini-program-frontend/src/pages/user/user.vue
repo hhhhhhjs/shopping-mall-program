@@ -65,54 +65,60 @@ async function handleLogout() {
       <!-- 顶部用户信息区域 -->
       <view class="header-section">
         <view class="header-bg" />
+        <!-- 用户信息卡片 -->
         <view class="user-info-card">
-          <view class="user-info">
-            <view class="avatar-wrapper">
-              <image
-                class="avatar"
-                :src="userInfo.avatar || '/static/default-avatar.png'"
-                mode="aspectFill"
-              />
-            </view>
-            <view class="info-content">
-              <view class="nickname">
-                {{ userInfo.nickname || '用户' }}
+          <view class="card-content">
+            <view class="user-info">
+              <view class="avatar-wrapper">
+                <view class="avatar-ring">
+                  <image
+                    class="avatar"
+                    :src="userInfo.avatar || '/static/default-avatar.png'"
+                    mode="aspectFill"
+                  />
+                </view>
               </view>
-              <view class="user-level">
-                <wd-icon name="vip" size="14px" color="#f59e0b" />
-                <text class="level-text">{{ userInfo.level || 1 }}级会员</text>
+              <view class="info-content">
+                <view class="nickname">
+                  {{ userInfo.nickname || '用户' }}
+                </view>
+                <view class="user-level">
+                  <text class="level-text">{{ userInfo.level || 1 }}级会员</text>
+                </view>
               </view>
-            </view>
-            <view class="arrow-right">
-              <wd-icon name="arrow-right" size="18px" color="#9ca3af" />
+              <view class="arrow-right">
+                <wd-icon name="arrow-right" size="20px" color="#9ca3af" />
+              </view>
             </view>
           </view>
+        </view>
 
-          <!-- 积分信息 -->
-          <view class="points-row">
-            <view class="points-item">
-              <view class="points-value">
+        <!-- 积分统计卡片 -->
+        <view class="stats-card">
+          <view class="stats-row">
+            <view class="stats-item">
+              <view class="stats-value">
                 {{ userInfo.points || 0 }}
               </view>
-              <view class="points-label">
+              <view class="stats-label">
                 积分
               </view>
             </view>
-            <view class="divider" />
-            <view class="points-item">
-              <view class="points-value">
+            <view class="stats-divider" />
+            <view class="stats-item">
+              <view class="stats-value">
                 {{ userInfo.orderCount || 0 }}
               </view>
-              <view class="points-label">
+              <view class="stats-label">
                 订单
               </view>
             </view>
-            <view class="divider" />
-            <view class="points-item">
-              <view class="points-value">
+            <view class="stats-divider" />
+            <view class="stats-item">
+              <view class="stats-value">
                 {{ userInfo.favoriteCount || 0 }}
               </view>
-              <view class="points-label">
+              <view class="stats-label">
                 收藏
               </view>
             </view>
@@ -154,8 +160,8 @@ async function handleLogout() {
 <style lang="scss" scoped>
 .user-page {
   height: 100vh;
-  background: #f5f7fa;
-  overflow: hidden;
+  background: #fff;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -173,27 +179,36 @@ async function handleLogout() {
 // ========== 个人中心样式 ==========
 .header-section {
   position: relative;
-  padding-bottom: 60rpx;
+  // background: linear-gradient(180deg,
+  //   rgba(219, 234, 254, 0.8) 0%,
+  //   rgba(239, 246, 255, 0.6) 40%,
+  //   rgba(255, 255, 255, 0) 100%
+  // );
+
+  background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 50%, #ffffff 100%);
+  // background: linear-gradient(180deg, #e0c3fc 0%, #8ec5fc 100%);
+  border-radius: 0 0 20px 20px;
+  padding-top: calc(env(safe-area-inset-top) + 40rpx);
+  padding-bottom: 40rpx;
 
   .header-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 320rpx;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 0 0 40rpx 40rpx;
+    display: none;
   }
 }
 
 .user-info-card {
   position: relative;
   margin: 0 32rpx;
-  margin-top: calc(120rpx + env(safe-area-inset-top));
   background: #fff;
   border-radius: 24rpx;
-  padding: 40rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4rpx 24rpx rgba(59, 130, 246, 0.08);
+  overflow: hidden;
+  display: flex;
+
+  .card-content {
+    flex: 1;
+    padding: 32rpx;
+  }
 }
 
 .user-info {
@@ -201,14 +216,21 @@ async function handleLogout() {
   align-items: center;
 
   .avatar-wrapper {
-    margin-right: 28rpx;
+    margin-right: 24rpx;
 
-    .avatar {
-      width: 120rpx;
-      height: 120rpx;
+    .avatar-ring {
+      width: 110rpx;
+      height: 110rpx;
       border-radius: 50%;
-      border: 4rpx solid #fff;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+
+      padding: 5rpx;
+      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.25);
+
+      .avatar {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
     }
   }
 
@@ -219,17 +241,17 @@ async function handleLogout() {
       font-size: 36rpx;
       font-weight: 600;
       color: #1e293b;
-      margin-bottom: 8rpx;
+      margin-bottom: 10rpx;
     }
 
     .user-level {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 8rpx;
 
       .level-text {
         font-size: 24rpx;
         color: #f59e0b;
+        font-weight: 500;
       }
     }
   }
@@ -239,41 +261,46 @@ async function handleLogout() {
   }
 }
 
-.points-row {
+.stats-card {
+  margin: 24rpx 32rpx 0;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 36rpx 0;
+  box-shadow: 0 4rpx 24rpx rgba(59, 130, 246, 0.06);
+}
+
+.stats-row {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  margin-top: 40rpx;
-  padding-top: 40rpx;
-  border-top: 1rpx solid #f1f5f9;
 
-  .points-item {
+  .stats-item {
     text-align: center;
     flex: 1;
 
-    .points-value {
-      font-size: 40rpx;
+    .stats-value {
+      font-size: 44rpx;
       font-weight: 700;
       color: #1e293b;
-      margin-bottom: 8rpx;
+      margin-bottom: 10rpx;
     }
 
-    .points-label {
-      font-size: 24rpx;
+    .stats-label {
+      font-size: 26rpx;
       color: #9ca3af;
     }
   }
 
-  .divider {
+  .stats-divider {
     width: 1rpx;
-    height: 60rpx;
+    height: 56rpx;
     background: #e5e7eb;
   }
 }
 
 .menu-section {
   padding: 0 32rpx;
-  margin-top: 32rpx;
+  margin-top: 24rpx;
 }
 
 .menu-card {

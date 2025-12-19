@@ -73,13 +73,6 @@ function togglePasswordVisibility() {
   showPassword.value = !showPassword.value
 }
 
-// 暂不登录，去首页
-function goHome() {
-  uni.switchTab({
-    url: '/pages/index/index',
-  })
-}
-
 // 返回上一页
 function goBack() {
   uni.navigateBack({
@@ -133,7 +126,7 @@ function goBack() {
         <!-- 密码输入框 -->
         <view class="input-item">
           <view class="input-box">
-            <wd-icon name="lock-on" size="20px" color="#3b82f6" custom-class="input-prefix-icon" />
+            <wd-icon name="person" size="20px" color="#3b82f6" custom-class="input-prefix-icon" />
             <input
               v-model="formData.password"
               class="input-field"
@@ -178,11 +171,6 @@ function goBack() {
             <text class="text-link">《隐私政策》</text>
           </view>
         </view>
-
-        <!-- 暂不登录 -->
-        <view class="skip-login" @tap="goHome">
-          <text>暂不登录，去首页逛逛</text>
-        </view>
       </view>
     </view>
   </view>
@@ -192,7 +180,7 @@ function goBack() {
 .login-page {
   height: 100%;
   background: linear-gradient(180deg, #e8f4fc 0%, #d4e8f7 30%, #f5f9fc 100%);
-  overflow: hidden;
+  overflow: auto;
   box-sizing: border-box;
 }
 
@@ -359,18 +347,6 @@ function goBack() {
     .text-link {
       color: #3b82f6;
     }
-  }
-}
-
-// 暂不登录
-.skip-login {
-  text-align: center;
-  margin-top: 40rpx;
-  padding: 20rpx;
-
-  text {
-    font-size: 28rpx;
-    color: #3b82f6;
   }
 }
 </style>

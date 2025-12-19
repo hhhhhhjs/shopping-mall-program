@@ -9,7 +9,7 @@ import {
 const userInfoState: IUserInfoRes = {
   userId: -1,
   username: '',
-  nickname: '',
+  nickname: '马睿',
   avatar: '/static/images/default-avatar.png',
 }
 
