@@ -1,5 +1,6 @@
 import type {
   ILoginForm,
+  IPhoneLoginForm,
 } from '@/api/login'
 import type { IAuthLoginRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
@@ -9,6 +10,7 @@ import {
   logout as _logout,
   refreshToken as _refreshToken,
   wxLogin as _wxLogin,
+  phoneLogin as _phoneLogin,
   getWxCode,
 } from '@/api/login'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
@@ -174,6 +176,43 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 手机号一键登录
+     * 通过微信 getPhoneNumber 获取手机号授权后调用
+     * @param phoneCode 手机号授权返回的 code（基础库 2.21.2+）
+     * @returns 登录结果
+     */
+    const phoneLogin = async (phoneCode: string) => {
+      try {
+        // 获取微信小程序登录的code
+        const wxCodeRes = await getWxCode()
+        console.log('手机号登录-wxCode: ', wxCodeRes.code)
+
+        const res = await _phoneLogin({
+          code: wxCodeRes.code,
+          phoneCode,
+        })
+        console.log('手机号登录-res: ', res)
+        await _postLogin(res)
+        uni.showToast({
+          title: '登录成功',
+          icon: 'success',
+        })
+        return res
+      }
+      catch (error) {
+        console.error('手机号登录失败:', error)
+        uni.showToast({
+          title: '登录失败，请重试',
+          icon: 'error',
+        })
+        throw error
+      }
+      finally {
+        updateNowTime()
+      }
+    }
+
+    /**
      * 退出登录 并 删除用户信息
      */
     const logout = async () => {
@@ -297,6 +336,7 @@ export const useTokenStore = defineStore(
       // 核心API方法
       login,
       wxLogin,
+      phoneLogin,
       logout,
 
       // 认证状态判断（最常用的）

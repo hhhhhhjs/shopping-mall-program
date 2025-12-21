@@ -15,6 +15,7 @@ import {
 } from 'unocss'
 
 export default defineConfig({
+  preflight: false,
   presets: [
     presetUni({
       attributify: false,

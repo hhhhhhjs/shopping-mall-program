@@ -6,15 +6,14 @@ import { useTokenStore } from '@/store/token'
 onLaunch((options) => {
   console.log('App.vue onLaunch', options)
 
-  // 入口登录检查：未登录则跳转到个人中心
+  // 入口登录检查：未登录则跳转到登录页面
   const tokenStore = useTokenStore()
   tokenStore.updateNowTime()
 
   if (!tokenStore.hasLogin) {
-    console.log('[App] 未登录，跳转到个人中心')
     // 延迟执行，确保页面初始化完成
     setTimeout(() => {
-      uni.switchTab({ url: '/pages/user/user' })
+      uni.reLaunch({ url: '/pages/login/login' })
     }, 100)
   }
 })
@@ -34,34 +33,4 @@ onHide(() => {
 })
 </script>
 
-<style lang="scss">
-/* 重点 1: 去掉 scoped，必须是全局样式 */
-
-/* 重点 2: 使用通配符 * 强制隐藏所有元素的滚动条 */
-* {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE 10+ */
-}
-
-/* 重点 3: 针对 Webkit 内核 (Chrome/Safari/Edge/微信浏览器) */
-::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  -webkit-appearance: none;
-  background: transparent;
-}
-
-/* 重点 4: 专门针对 uni-app 的 page 标签 */
-page {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-/* 额外保险: 如果有 scroll-view 组件 */
-scroll-view ::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-</style>
+<style lang="scss"></style>

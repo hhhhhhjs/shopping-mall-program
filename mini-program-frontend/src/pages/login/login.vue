@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { useTokenStore } from '@/store/token'
 
 defineOptions({
@@ -15,46 +15,41 @@ definePage({
 
 const tokenStore = useTokenStore()
 
-// 表单数据
-const formData = reactive({
-  username: '',
-  password: '',
-})
-
-// 密码是否可见
-const showPassword = ref(false)
 // 登录加载状态
 const loading = ref(false)
 // 同意协议
 const agreePolicy = ref(false)
 
-// 处理登录
-async function handleLogin() {
-  // 验证是否同意协议
-  if (!agreePolicy.value) {
+/**
+ * 处理手机号授权回调
+ * 微信基础库 2.21.2+ 版本返回 code，旧版本返回 encryptedData 和 iv
+ */
+async function handleGetPhoneNumber(e: any) {
+  console.log('手机号授权回调:', e)
+
+  // 用户拒绝授权
+  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+    console.log('用户拒绝授权手机号')
     uni.showToast({
-      title: '请先阅读并同意用户协议',
+      title: '需要授权手机号才能登录',
       icon: 'none',
     })
     return
   }
 
-  // 验证表单
-  if (!formData.username.trim()) {
-    uni.showToast({ title: '请输入用户名', icon: 'none' })
-    return
-  }
-  if (!formData.password.trim()) {
-    uni.showToast({ title: '请输入密码', icon: 'none' })
+  // 获取手机号授权返回的 code（新版API）
+  const phoneCode = e.detail.code
+  if (!phoneCode) {
+    uni.showToast({
+      title: '获取手机号失败，请重试',
+      icon: 'none',
+    })
     return
   }
 
   try {
     loading.value = true
-    await tokenStore.login({
-      username: formData.username,
-      password: formData.password,
-    })
+    await tokenStore.phoneLogin(phoneCode)
     // 登录成功后跳转到首页
     uni.switchTab({
       url: '/pages/index/index',
@@ -66,18 +61,6 @@ async function handleLogin() {
   finally {
     loading.value = false
   }
-}
-
-// 切换密码显示状态
-function togglePasswordVisibility() {
-  showPassword.value = !showPassword.value
-}
-
-// 暂不登录，去首页
-function goHome() {
-  uni.switchTab({
-    url: '/pages/index/index',
-  })
 }
 
 // 返回上一页
@@ -114,53 +97,25 @@ function goBack() {
         </view>
       </view>
 
-      <!-- 表单区域 -->
+      <!-- 标题区域 -->
+      <view class="title-section">
+        <text class="title">欢迎登录</text>
+      </view>
+
+      <!-- 登录按钮区域 -->
       <view class="form-section">
-        <!-- 用户名输入框 -->
-        <view class="input-item">
-          <view class="input-box">
-            <wd-icon name="person" size="20px" color="#3b82f6" custom-class="input-prefix-icon" />
-            <input
-              v-model="formData.username"
-              class="input-field"
-              type="text"
-              placeholder="请输入用户名"
-              placeholder-class="input-placeholder"
-            >
-          </view>
-        </view>
-
-        <!-- 密码输入框 -->
-        <view class="input-item">
-          <view class="input-box">
-            <wd-icon name="lock-on" size="20px" color="#3b82f6" custom-class="input-prefix-icon" />
-            <input
-              v-model="formData.password"
-              class="input-field"
-              :password="!showPassword"
-              placeholder="请输入密码"
-              placeholder-class="input-placeholder"
-            >
-            <view class="password-toggle" @tap="togglePasswordVisibility">
-              <wd-icon
-                :name="showPassword ? 'view' : 'eye-close'"
-                size="20px"
-                color="#9ca3af"
-              />
-            </view>
-          </view>
-        </view>
-
-        <!-- 登录按钮 -->
+        <!-- 手机号一键登录按钮 -->
         <view class="login-btn-wrapper">
           <button
-            class="login-btn"
-            :class="{ 'is-loading': loading }"
-            :disabled="loading"
-            @tap="handleLogin"
+            class="login-btn phone-login-btn"
+            :class="{ 'is-loading': loading, 'is-disabled': !agreePolicy }"
+            :disabled="loading || !agreePolicy"
+            open-type="getPhoneNumber"
+            @getphonenumber="handleGetPhoneNumber"
           >
-            <text v-if="!loading">登 录</text>
-            <wd-loading v-else color="#fff" size="20px" />
+            <wd-icon v-if="!loading" name="phone" size="20px" color="#fff" custom-class="btn-icon" />
+            <wd-loading v-if="loading" color="#fff" size="20px" />
+            <text v-else>手机号一键登录</text>
           </button>
         </view>
 
@@ -177,11 +132,6 @@ function goBack() {
             <text class="text-gray">及</text>
             <text class="text-link">《隐私政策》</text>
           </view>
-        </view>
-
-        <!-- 暂不登录 -->
-        <view class="skip-login" @tap="goHome">
-          <text>暂不登录，去首页逛逛</text>
         </view>
       </view>
     </view>
@@ -229,7 +179,7 @@ function goBack() {
 .logo-section {
   display: flex;
   justify-content: center;
-  margin-bottom: 80rpx;
+  margin-bottom: 48rpx;
 
   .logo-card {
     width: 180rpx;
@@ -248,44 +198,31 @@ function goBack() {
   }
 }
 
+// 标题区域
+.title-section {
+  text-align: center;
+  margin-bottom: 64rpx;
+
+  .title {
+    display: block;
+    font-size: 48rpx;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16rpx;
+  }
+
+  .subtitle {
+    display: block;
+    font-size: 28rpx;
+    color: #64748b;
+  }
+}
+
 // 表单区域
 .form-section {
   display: flex;
   flex-direction: column;
   gap: 32rpx;
-}
-
-.input-item {
-  .input-box {
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border-radius: 48rpx;
-    padding: 0 32rpx;
-    height: 96rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
-
-    :deep(.input-prefix-icon) {
-      margin-right: 20rpx;
-    }
-
-    .input-field {
-      flex: 1;
-      height: 100%;
-      font-size: 30rpx;
-      color: #1e293b;
-    }
-
-    .input-placeholder {
-      color: #9ca3af;
-      font-size: 30rpx;
-    }
-
-    .password-toggle {
-      padding: 16rpx;
-      margin-right: -16rpx;
-    }
-  }
 }
 
 // 登录按钮
@@ -301,21 +238,43 @@ function goBack() {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12rpx;
     color: #fff;
     font-size: 32rpx;
     font-weight: 600;
-    letter-spacing: 4rpx;
+    letter-spacing: 2rpx;
     box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.4);
     transition: all 0.2s ease;
-
-    &:active {
-      transform: scale(0.98);
-      opacity: 0.9;
-    }
 
     &.is-loading {
       opacity: 0.8;
     }
+
+    &.is-disabled {
+      opacity: 0.5;
+      background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+      box-shadow: none;
+    }
+
+    :deep(.btn-icon) {
+      margin-right: 8rpx;
+    }
+  }
+
+  .phone-login-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.4);
+  }
+}
+
+// 登录提示
+.login-tips {
+  text-align: center;
+  margin-top: -8rpx;
+
+  text {
+    font-size: 24rpx;
+    color: #9ca3af;
   }
 }
 
@@ -324,7 +283,7 @@ function goBack() {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  margin-top: 16rpx;
+  margin-top: 32rpx;
   gap: 12rpx;
 
   .agreement-check {
@@ -358,18 +317,6 @@ function goBack() {
     .text-link {
       color: #3b82f6;
     }
-  }
-}
-
-// 暂不登录
-.skip-login {
-  text-align: center;
-  margin-top: 40rpx;
-  padding: 20rpx;
-
-  text {
-    font-size: 28rpx;
-    color: #3b82f6;
   }
 }
 </style>

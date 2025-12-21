@@ -83,3 +83,22 @@ export function getWxCode() {
 export function wxLogin(data: { code: string }) {
   return http.post<IAuthLoginRes>('/auth/wxLogin', data)
 }
+
+/**
+ * 手机号登录参数
+ */
+export interface IPhoneLoginForm {
+  /** 微信登录凭证 code */
+  code: string
+  /** 手机号授权返回的 code（基础库 2.21.2+） */
+  phoneCode: string
+}
+
+/**
+ * 微信手机号一键登录
+ * @param data 手机号登录参数
+ * @returns Promise 包含登录结果
+ */
+export function phoneLogin(data: IPhoneLoginForm) {
+  return http.post<IAuthLoginRes>('/auth/phoneLogin', data)
+}

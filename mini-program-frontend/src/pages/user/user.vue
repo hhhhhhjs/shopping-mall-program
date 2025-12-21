@@ -1,11 +1,8 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue'
-
-import Login from '@/components/login.vue'
+import { computed } from 'vue'
 
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
-import { tabbarStore } from '@/tabbar/store'
 
 defineOptions({
   name: 'User',
@@ -20,14 +17,6 @@ definePage({
 
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
-
-// 是否已登录
-const isLoggedIn = computed(() => tokenStore.hasLogin)
-
-// 未登录时隐藏 tabbar
-watch(isLoggedIn, (val) => {
-  tabbarStore.setVisible(val)
-}, { immediate: true })
 
 // 用户信息
 const userInfo = computed(() => userStore.userInfo)
@@ -60,8 +49,12 @@ async function handleLogout() {
 
 <template>
   <view class="user-page">
-    <!-- ========== 已登录：个人中心 ========== -->
-    <scroll-view v-if="isLoggedIn" scroll-y class="user-scroll-container">
+    <!-- 个人中心 -->
+    <scroll-view
+      scroll-y
+      :show-scrollbar="false"
+      class="user-scroll"
+    >
       <!-- 顶部用户信息区域 -->
       <view class="header-section">
         <view class="header-bg" />
@@ -151,9 +144,6 @@ async function handleLogout() {
         </button>
       </view>
     </scroll-view>
-
-    <!-- ========== 未登录：显示登录组件 ========== -->
-    <Login v-else class="login-wrapper" />
   </view>
 </template>
 
@@ -161,19 +151,14 @@ async function handleLogout() {
 .user-page {
   height: 100vh;
   background: #fff;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.user-scroll-container {
+.user-scroll {
+  height: 100%;
   flex: 1;
-  height: 0;
-}
-
-.login-wrapper {
-  flex: 1;
-  overflow: hidden;
 }
 
 // ========== 个人中心样式 ==========
