@@ -1,6 +1,8 @@
 import Router from 'koa-router'
 import { wxService } from '../services/wx'
+import { userService } from '../services/user'
 import { generateToken } from '../utils/jwt'
+import { UserStatus } from '../types/user'
 
 const router = new Router({
   prefix: '/auth',
@@ -9,6 +11,7 @@ const router = new Router({
 /**
  * 手机号一键登录
  * POST /auth/phoneLogin
+ * B2B 项目：通过手机号唯一标识用户
  */
 router.post('/phoneLogin', async (ctx) => {
   const { code, phoneCode } = ctx.request.body as {
@@ -32,7 +35,7 @@ router.post('/phoneLogin', async (ctx) => {
       return
     }
 
-    const { openid, session_key } = sessionResult
+    const { openid } = sessionResult
 
     if (!openid) {
       ctx.body = {
@@ -70,11 +73,25 @@ router.post('/phoneLogin', async (ctx) => {
     console.log('用户手机号:', phoneNumber)
     console.log('用户 openid:', openid)
 
-    // 3. TODO: 根据手机号和 openid 创建或查找用户（需要数据库支持）
-    // const user = await userService.findOrCreateByPhone(phoneNumber, openid)
+    // 3. 根据手机号查找或创建用户（B2B 核心逻辑：手机号为唯一标识）
+    const user = await userService.findOrCreateByPhone(phoneNumber, openid)
 
-    // 4. 生成 token 返回
-    const token = generateToken({ openid, phoneNumber })
+    // 4. 检查用户状态
+    if (user.status === UserStatus.DISABLED) {
+      ctx.body = {
+        code: 403,
+        message: '账号已被禁用，请联系管理员',
+        data: null,
+      }
+      return
+    }
+
+    // 5. 生成 token 返回（token 中包含 userId 和 phone）
+    const token = generateToken({
+      userId: user.id,
+      phone: user.phone,
+      openid: user.openid,
+    })
 
     ctx.body = {
       code: 0,
@@ -82,8 +99,15 @@ router.post('/phoneLogin', async (ctx) => {
       data: {
         token,
         expiresIn: 7200,
-        phoneNumber,
-        openid,
+        user: {
+          id: user.id,
+          phone: user.phone,
+          nickname: user.nickname,
+          avatar: user.avatar,
+          level: user.level,
+          points: user.points,
+          companyName: user.companyName,
+        },
       },
     }
   } catch (error: any) {
@@ -101,7 +125,7 @@ router.post('/phoneLogin', async (ctx) => {
  * GET /auth/logout
  */
 router.get('/logout', async (ctx) => {
-  // TODO: 如需服务端管理 token，可在此处理 token 失效逻辑
+  // TODO: 如需服务端管理 token，可在此处理 token 失效逻辑（如加入黑名单）
   ctx.body = {
     code: 0,
     message: 'ok',

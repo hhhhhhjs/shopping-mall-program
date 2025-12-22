@@ -5,8 +5,9 @@ import { jwtConfig } from '../config'
  * Token 载荷类型
  */
 export interface TokenPayload {
-  openid: string
-  phoneNumber: string
+  userId: number
+  phone: string
+  openid?: string | null
   [key: string]: any
 }
 

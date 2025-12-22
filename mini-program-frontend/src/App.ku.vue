@@ -39,3 +39,5 @@ defineExpose({
     <FgTabbar v-if="isCurrentPageTabbar" />
   </view>
 </template>
+
+<style lang="scss"></style>

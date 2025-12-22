@@ -121,7 +121,7 @@ export function getEnvBaseUrl() {
   let baseUrl = import.meta.env.VITE_SERVER_BASEURL
 
   // # 有些同学可能需要在微信小程序里面根据 develop、trial、release 分别设置上传地址，参考代码如下。
-  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = 'http://192.168.31.71:3000'
+  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = 'http://10.20.3.146:3000'
   const VITE_SERVER_BASEURL__WEIXIN_TRIAL = 'https://ukw0y1.laf.run'
   const VITE_SERVER_BASEURL__WEIXIN_RELEASE = 'https://ukw0y1.laf.run'
 

@@ -50,11 +50,7 @@ async function handleLogout() {
 <template>
   <view class="user-page">
     <!-- 个人中心 -->
-    <scroll-view
-      scroll-y
-      :show-scrollbar="false"
-      class="user-scroll"
-    >
+    <view class="user-scroll">
       <!-- 顶部用户信息区域 -->
       <view class="header-section">
         <view class="header-bg" />
@@ -144,7 +140,7 @@ async function handleLogout() {
           退出登录
         </button>
       </view>
-    </scroll-view>
+    </view>
   </view>
 </template>
 
@@ -160,19 +156,20 @@ async function handleLogout() {
 .user-scroll {
   height: 100%;
   flex: 1;
+  overflow-y: auto;
+
+  // 隐藏滚动条
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 // ========== 个人中心样式 ==========
 .header-section {
   position: relative;
-  // background: linear-gradient(180deg,
-  //   rgba(219, 234, 254, 0.8) 0%,
-  //   rgba(239, 246, 255, 0.6) 40%,
-  //   rgba(255, 255, 255, 0) 100%
-  // );
-
   background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 50%, #ffffff 100%);
-  // background: linear-gradient(180deg, #e0c3fc 0%, #8ec5fc 100%);
   border-radius: 0 0 20px 20px;
   // 增加顶部边距适配灵动岛，iPhone 14 Pro 及之后机型灵动岛高度约 59pt
   padding-top: calc(env(safe-area-inset-top) + 80rpx);
