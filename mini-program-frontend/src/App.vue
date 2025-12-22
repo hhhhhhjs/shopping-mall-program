@@ -33,4 +33,31 @@ onHide(() => {
 })
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
+  background: transparent;
+}
+
+/* 确保scroll-view组件也隐藏滚动条 */
+scroll-view::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
+  background: transparent;
+}
+
+/* 为页面添加隐藏滚动条样式 */
+.comment-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
+  background: transparent;
+}
+</style>

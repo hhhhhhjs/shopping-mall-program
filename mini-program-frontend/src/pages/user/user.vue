@@ -40,7 +40,7 @@ async function handleLogout() {
     success: async (res) => {
       if (res.confirm) {
         await tokenStore.logout()
-        uni.showToast({ title: '已退出登录', icon: 'none' })
+        uni.reLaunch({ url: '/pages/login/login' })
       }
     },
   })
@@ -58,7 +58,7 @@ async function handleLogout() {
       <!-- 顶部用户信息区域 -->
       <view class="header-section">
         <view class="header-bg" />
-        <!-- 用户信息卡片 -->
+        <!-- 用户信息卡片 - 居中布局适配灵动岛 -->
         <view class="user-info-card">
           <view class="card-content">
             <view class="user-info">
@@ -69,6 +69,10 @@ async function handleLogout() {
                     :src="userInfo.avatar || '/static/default-avatar.png'"
                     mode="aspectFill"
                   />
+                  <!-- 编辑按钮 -->
+                  <view class="edit-btn">
+                    <wd-icon name="edit-outline" size="28rpx" color="#fff" />
+                  </view>
                 </view>
               </view>
               <view class="info-content">
@@ -78,9 +82,6 @@ async function handleLogout() {
                 <view class="user-level">
                   <text class="level-text">{{ userInfo.level || 1 }}级会员</text>
                 </view>
-              </view>
-              <view class="arrow-right">
-                <wd-icon name="arrow-right" size="20px" color="#9ca3af" />
               </view>
             </view>
           </view>
@@ -173,7 +174,8 @@ async function handleLogout() {
   background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 50%, #ffffff 100%);
   // background: linear-gradient(180deg, #e0c3fc 0%, #8ec5fc 100%);
   border-radius: 0 0 20px 20px;
-  padding-top: calc(env(safe-area-inset-top) + 40rpx);
+  // 增加顶部边距适配灵动岛，iPhone 14 Pro 及之后机型灵动岛高度约 59pt
+  padding-top: calc(env(safe-area-inset-top) + 80rpx);
   padding-bottom: 40rpx;
 
   .header-bg {
@@ -184,9 +186,7 @@ async function handleLogout() {
 .user-info-card {
   position: relative;
   margin: 0 32rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 4rpx 24rpx rgba(59, 130, 246, 0.08);
+  background: transparent;
   overflow: hidden;
   display: flex;
 
@@ -198,51 +198,65 @@ async function handleLogout() {
 
 .user-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
 
   .avatar-wrapper {
-    margin-right: 24rpx;
+    margin-bottom: 24rpx;
 
     .avatar-ring {
-      width: 110rpx;
-      height: 110rpx;
+      position: relative;
+      width: 180rpx;
+      height: 180rpx;
       border-radius: 50%;
-
-      padding: 5rpx;
-      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.25);
 
       .avatar {
         width: 100%;
         height: 100%;
         border-radius: 50%;
       }
+
+      .edit-btn {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 56rpx;
+        height: 56rpx;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4rpx 12rpx rgba(37, 99, 235, 0.4);
+        border: 4rpx solid #fff;
+      }
     }
   }
 
   .info-content {
-    flex: 1;
+    text-align: center;
 
     .nickname {
-      font-size: 36rpx;
+      font-size: 40rpx;
       font-weight: 600;
       color: #1e293b;
-      margin-bottom: 10rpx;
+      margin-bottom: 16rpx;
     }
 
     .user-level {
       display: inline-flex;
       align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12rpx 28rpx;
+      border-radius: 32rpx;
+      box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
 
       .level-text {
-        font-size: 24rpx;
-        color: #f59e0b;
+        font-size: 26rpx;
+        color: #3b82f6;
         font-weight: 500;
       }
     }
-  }
-
-  .arrow-right {
-    padding: 16rpx;
   }
 }
 
