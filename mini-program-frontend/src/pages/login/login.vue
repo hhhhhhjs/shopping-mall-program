@@ -50,9 +50,9 @@ async function handleGetPhoneNumber(e: any) {
   try {
     loading.value = true
     await tokenStore.phoneLogin(phoneCode)
-    // 登录成功后跳转到首页
+    // 登录成功后跳转到商品页
     uni.switchTab({
-      url: '/pages/index/index',
+      url: '/pages/goods/list',
     })
   }
   catch (error) {
@@ -67,7 +67,7 @@ async function handleGetPhoneNumber(e: any) {
 function goBack() {
   uni.navigateBack({
     fail: () => {
-      uni.switchTab({ url: '/pages/index/index' })
+      uni.switchTab({ url: '/pages/goods/list' })
     },
   })
 }

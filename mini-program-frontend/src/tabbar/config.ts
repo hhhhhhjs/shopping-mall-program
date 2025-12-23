@@ -28,8 +28,8 @@ export const nativeTabbarList: NativeTabBarItem[] = [
   {
     iconPath: 'static/tabbar/home.png',
     selectedIconPath: 'static/tabbar/homeHL.png',
-    pagePath: 'pages/index/index',
-    text: '首页',
+    pagePath: 'pages/goods/list',
+    text: '商品',
   },
   {
     iconPath: 'static/tabbar/personal.png',
@@ -43,10 +43,10 @@ export const nativeTabbarList: NativeTabBarItem[] = [
 // 如果需要配置鼓包，需要在 'tabbar/store.ts' 里面设置，最后在 `tabbar/index.vue` 里面更改鼓包的图片
 export const customTabbarList: CustomTabBarItem[] = [
   {
-    text: '首页',
-    pagePath: 'pages/index/index',
+    text: '商品',
+    pagePath: 'pages/goods/list',
     iconType: 'unocss',
-    icon: 'i-carbon-home',
+    icon: 'i-carbon-shopping-cart',
     // badge: 'dot',
   },
   {
