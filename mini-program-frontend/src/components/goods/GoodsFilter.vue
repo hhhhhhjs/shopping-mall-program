@@ -76,6 +76,12 @@ function selectSort(sort: SortOption) {
   emit('update:currentSort', sort)
   showSort.value = false
 }
+
+// 关闭弹窗
+function closePopup() {
+  showSort.value = false
+  showFilter.value = false
+}
 </script>
 
 <template>
@@ -93,12 +99,23 @@ function selectSort(sort: SortOption) {
     </view>
   </view>
 
-  <!-- 排序弹窗 -->
-  <wd-popup v-model="showSort" position="bottom" round>
-    <view class="sort-popup">
+  <!-- 统一的弹窗容器 -->
+  <page-container
+    :show="showSort || showFilter"
+    position="bottom"
+    round
+    :overlay="true"
+    @clickoverlay="closePopup"
+  >
+    <!-- 排序弹窗内容 -->
+    <view v-if="showSort" class="sort-popup">
+      <!-- 顶部把手 -->
+      <view class="popup-handle" />
+
       <view class="popup-header">
         <text class="popup-title">排序方式</text>
       </view>
+
       <view class="sort-list">
         <view
           v-for="sort in sortOptions"
@@ -107,62 +124,85 @@ function selectSort(sort: SortOption) {
           :class="{ active: currentSort.label === sort.label }"
           @tap="selectSort(sort)"
         >
-          <text>{{ sort.label }}</text>
-          <wd-icon
-            v-if="currentSort.label === sort.label"
-            name="check"
-            size="18px"
-            color="#3b82f6"
-          />
+          <text class="sort-text">{{ sort.label }}</text>
+          <view v-if="currentSort.label === sort.label" class="check-icon">
+            <wd-icon name="check" size="20px" color="#3b82f6" />
+          </view>
         </view>
       </view>
-    </view>
-  </wd-popup>
 
-  <!-- 筛选弹窗 -->
-  <wd-popup v-model="showFilter" position="bottom" round>
-    <view class="filter-popup">
+      <!-- 底部安全区域 -->
+      <view class="popup-safe-area" />
+    </view>
+
+    <!-- 筛选弹窗内容 -->
+    <view v-if="showFilter" class="filter-popup">
+      <!-- 顶部把手 -->
+      <view class="popup-handle" />
+
       <view class="popup-header">
         <text class="popup-title">筛选条件</text>
-        <text class="popup-reset" @tap="resetFilter">重置</text>
-      </view>
-
-      <!-- 分类筛选 -->
-      <view v-if="categories.length > 0" class="filter-section">
-        <text class="section-title">商品分类</text>
-        <view class="category-grid">
-          <view
-            v-for="cat in categories"
-            :key="cat.id"
-            class="category-item"
-            :class="{ active: tempCategoryId === cat.id }"
-            @tap="selectCategory(cat.id)"
-          >
-            <text>{{ cat.name }}</text>
-          </view>
+        <view class="popup-reset" @tap="resetFilter">
+          <text class="reset-text">重置</text>
         </view>
       </view>
 
-      <!-- 积分兑换筛选 -->
-      <view class="filter-section">
-        <text class="section-title">其他筛选</text>
-        <view class="tag-list">
-          <view
-            class="filter-tag"
-            :class="{ active: tempSupportPoints }"
-            @tap="togglePoints"
-          >
-            <text>支持积分兑换</text>
+      <scroll-view class="filter-content" scroll-y enhanced>
+        <!-- 分类筛选 -->
+        <view v-if="categories.length > 0" class="filter-section">
+          <view class="section-title-wrapper">
+            <view class="section-title-line" />
+            <text class="section-title">商品分类</text>
+            <view class="section-title-line" />
+          </view>
+          <view class="category-grid">
+            <view
+              v-for="cat in categories"
+              :key="cat.id"
+              class="category-item"
+              :class="{ active: tempCategoryId === cat.id }"
+              @tap="selectCategory(cat.id)"
+            >
+              <text class="category-text">{{ cat.name }}</text>
+              <view v-if="tempCategoryId === cat.id" class="category-check">
+                <wd-icon name="check" size="16px" color="#fff" />
+              </view>
+            </view>
           </view>
         </view>
-      </view>
+
+        <!-- 积分兑换筛选 -->
+        <view class="filter-section">
+          <view class="section-title-wrapper">
+            <view class="section-title-line" />
+            <text class="section-title">其他筛选</text>
+            <view class="section-title-line" />
+          </view>
+          <view class="tag-list">
+            <view class="filter-tag" :class="{ active: tempSupportPoints }" @tap="togglePoints">
+              <text class="tag-text">支持积分兑换</text>
+              <view v-if="tempSupportPoints" class="tag-check">
+                <wd-icon name="check" size="16px" color="#fff" />
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 底部占位，避免被 tabbar 遮挡 -->
+        <view class="tabbar-spacer" />
+      </scroll-view>
 
       <!-- 确认按钮 -->
       <view class="filter-footer">
-        <button class="confirm-btn" @tap="confirmFilter">确定</button>
+        <button class="confirm-btn" @tap="confirmFilter">
+          <text class="btn-text">确定</text>
+        </button>
       </view>
+
+      <!-- 底部安全区域 + tabbar 高度 -->
+      <view class="popup-safe-area" />
     </view>
-  </wd-popup>
+  </page-container>
 </template>
 
 <style lang="scss" scoped>
@@ -197,8 +237,20 @@ function selectSort(sort: SortOption) {
 
 // 排序弹窗
 .sort-popup {
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+
+  // 顶部把手
+  .popup-handle {
+    width: 80rpx;
+    height: 8rpx;
+    background: #e5e7eb;
+    border-radius: 4rpx;
+    margin: 16rpx auto 0;
+  }
+
   .popup-header {
-    padding: 32rpx;
+    padding: 24rpx 32rpx;
     text-align: center;
     border-bottom: 1rpx solid #f0f0f0;
 
@@ -218,39 +270,66 @@ function selectSort(sort: SortOption) {
     align-items: center;
     justify-content: space-between;
     padding: 28rpx 32rpx;
+    transition: background 0.2s;
 
-    text {
+    .sort-text {
       font-size: 30rpx;
       color: #374151;
     }
 
-    &.active text {
-      color: #3b82f6;
-      font-weight: 500;
+    .check-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44rpx;
+      height: 44rpx;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 50%;
+    }
+
+    &.active {
+      .sort-text {
+        color: #3b82f6;
+        font-weight: 600;
+      }
     }
 
     &:active {
       background: #f9fafb;
     }
   }
+
+  // 底部安全区域
+  .popup-safe-area {
+    height: env(safe-area-inset-bottom);
+    background: #fff;
+  }
 }
 
 // 筛选弹窗
 .filter-popup {
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
   max-height: 70vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 
-  // 隐藏滚动条
-  &::-webkit-scrollbar {
-    display: none;
+  // 顶部把手
+  .popup-handle {
+    width: 80rpx;
+    height: 8rpx;
+    background: #e5e7eb;
+    border-radius: 4rpx;
+    margin: 16rpx auto 0;
   }
 
   .popup-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 32rpx;
+    padding: 24rpx 32rpx;
     border-bottom: 1rpx solid #f0f0f0;
+    flex-shrink: 0;
 
     .popup-title {
       font-size: 32rpx;
@@ -259,20 +338,56 @@ function selectSort(sort: SortOption) {
     }
 
     .popup-reset {
-      font-size: 28rpx;
-      color: #3b82f6;
+      display: flex;
+      align-items: center;
+      padding: 8rpx 20rpx;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 32rpx;
+
+      .reset-text {
+        font-size: 26rpx;
+        color: #3b82f6;
+        font-weight: 500;
+      }
+
+      &:active {
+        opacity: 0.8;
+      }
     }
+  }
+
+  .filter-content {
+    flex: 1;
+    overflow-y: auto;
   }
 
   .filter-section {
     padding: 32rpx;
 
-    .section-title {
-      font-size: 28rpx;
-      color: #6b7280;
+    .section-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
       margin-bottom: 24rpx;
-      display: block;
+
+      .section-title {
+        font-size: 28rpx;
+        color: #1e293b;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .section-title-line {
+        flex: 1;
+        height: 1rpx;
+        background: linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%);
+      }
     }
+  }
+
+  // 底部占位，避免被 tabbar 遮挡
+  .tabbar-spacer {
+    height: 100rpx;
   }
 
   .category-grid {
@@ -282,27 +397,49 @@ function selectSort(sort: SortOption) {
   }
 
   .category-item {
+    position: relative;
     padding: 16rpx 32rpx;
-    background: #f5f7fa;
-    border-radius: 8rpx;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 16rpx;
     border: 2rpx solid transparent;
+    transition: all 0.3s;
+    overflow: hidden;
 
-    text {
+    .category-text {
       font-size: 28rpx;
       color: #374151;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-check {
+      position: absolute;
+      right: -8rpx;
+      top: -8rpx;
+      width: 36rpx;
+      height: 36rpx;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
     }
 
     &.active {
-      background: #eff6ff;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
       border-color: #3b82f6;
+      transform: translateY(-2rpx);
+      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.15);
 
-      text {
+      .category-text {
         color: #3b82f6;
+        font-weight: 600;
       }
     }
 
     &:active {
-      opacity: 0.8;
+      transform: scale(0.95);
     }
   }
 
@@ -313,29 +450,57 @@ function selectSort(sort: SortOption) {
   }
 
   .filter-tag {
+    position: relative;
     padding: 16rpx 32rpx;
-    background: #f5f7fa;
-    border-radius: 8rpx;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 16rpx;
     border: 2rpx solid transparent;
+    transition: all 0.3s;
+    overflow: hidden;
 
-    text {
+    .tag-text {
       font-size: 28rpx;
       color: #374151;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tag-check {
+      position: absolute;
+      right: -8rpx;
+      top: -8rpx;
+      width: 36rpx;
+      height: 36rpx;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
     }
 
     &.active {
-      background: #eff6ff;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
       border-color: #3b82f6;
+      transform: translateY(-2rpx);
+      box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.15);
 
-      text {
+      .tag-text {
         color: #3b82f6;
+        font-weight: 600;
       }
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
   }
 
   .filter-footer {
     padding: 24rpx 32rpx;
-    padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+    border-top: 1rpx solid #f0f0f0;
+    flex-shrink: 0;
+    margin-bottom: 100rpx; /* tabbar 高度 */
 
     .confirm-btn {
       width: 100%;
@@ -343,14 +508,29 @@ function selectSort(sort: SortOption) {
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       border-radius: 44rpx;
       border: none;
-      color: #fff;
-      font-size: 32rpx;
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.3);
+      transition: all 0.3s;
+
+      .btn-text {
+        color: #fff;
+        font-size: 32rpx;
+        font-weight: 600;
+      }
 
       &:active {
-        opacity: 0.9;
+        transform: scale(0.98);
+        box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.4);
       }
     }
+  }
+
+  // 底部安全区域
+  .popup-safe-area {
+    height: calc(env(safe-area-inset-bottom) + 100rpx); /* 安全区域 + tabbar 高度 */
+    background: #fff;
   }
 }
 </style>

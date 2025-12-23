@@ -70,11 +70,6 @@ function formatPrice(price: number): string {
   border-radius: 16rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-
-  &:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
-  }
 }
 
 .goods-image-wrapper {
