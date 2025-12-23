@@ -1,13 +1,41 @@
 import 'dotenv/config'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'
+import serve from 'koa-static'
+import path from 'path'
 import router from './routes'
 import { testConnection } from './db'
+import { staticConfig } from './config'
+import fs from 'fs'
 
 const app = new Koa()
 
+// 确保静态文件目录存在
+const avatarDir = path.join(staticConfig.root, staticConfig.upload.avatarDir)
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir, { recursive: true })
+  console.log(`📁 创建头像目录: ${avatarDir}`)
+}
+
 // 中间件
 app.use(bodyParser())
+
+// 静态文件服务 - 挂载到 /static 路径
+const staticMiddleware = serve(staticConfig.root)
+app.use(async (ctx, next) => {
+  if (ctx.path.startsWith('/static')) {
+    // 去掉 /static 前缀后交给 koa-static 处理
+    const originalPath = ctx.path
+    ctx.path = ctx.path.replace('/static', '') || '/'
+    await staticMiddleware(ctx, async () => {
+      // 如果静态文件未找到，恢复原始路径继续
+      ctx.path = originalPath
+      await next()
+    })
+  } else {
+    await next()
+  }
+})
 
 // 错误处理
 app.use(async (ctx, next) => {

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 
-import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 
 defineOptions({
@@ -15,7 +14,6 @@ definePage({
   },
 })
 
-const tokenStore = useTokenStore()
 const userStore = useUserStore()
 
 // 用户信息
@@ -33,17 +31,11 @@ function goToPage(path: string) {
   uni.navigateTo({ url: path })
 }
 
-async function handleLogout() {
-  uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    success: async (res) => {
-      if (res.confirm) {
-        await tokenStore.logout()
-        uni.reLaunch({ url: '/pages/login/login' })
-      }
-    },
-  })
+/**
+ * 跳转到个人资料编辑页
+ */
+function goToProfileEdit() {
+  uni.navigateTo({ url: '/pages/profile/edit' })
 }
 </script>
 
@@ -58,9 +50,10 @@ async function handleLogout() {
         <view class="user-info-card">
           <view class="card-content">
             <view class="user-info">
-              <view class="avatar-wrapper">
+              <view class="avatar-wrapper" @tap="goToProfileEdit">
                 <view class="avatar-ring">
                   <image
+                    :key="userInfo.avatar"
                     class="avatar"
                     :src="userInfo.avatar || '/static/default-avatar.png'"
                     mode="aspectFill"
@@ -132,13 +125,6 @@ async function handleLogout() {
             <wd-icon name="arrow-right" size="16px" color="#d1d5db" />
           </view>
         </view>
-      </view>
-
-      <!-- 退出登录按钮 -->
-      <view class="logout-section">
-        <button class="logout-btn" @tap="handleLogout">
-          退出登录
-        </button>
       </view>
     </view>
   </view>
@@ -329,29 +315,6 @@ async function handleLogout() {
     .menu-title {
       font-size: 30rpx;
       color: #374151;
-    }
-  }
-}
-
-.logout-section {
-  padding: 60rpx 32rpx;
-  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
-
-  .logout-btn {
-    width: 100%;
-    height: 88rpx;
-    background: #fff;
-    border: 2rpx solid #ef4444;
-    border-radius: 44rpx;
-    color: #ef4444;
-    font-size: 30rpx;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:active {
-      background: #fef2f2;
     }
   }
 }

@@ -1,3 +1,5 @@
+import path from 'path'
+
 /**
  * 微信小程序配置
  */
@@ -27,4 +29,23 @@ export const dbConfig = {
   connectionLimit: 10,
   waitForConnections: true,
   queueLimit: 0,
+}
+
+/**
+ * 静态文件配置
+ */
+export const staticConfig = {
+  // 静态文件根目录
+  root: path.resolve(__dirname, '../../static'),
+  // 静态文件访问基础URL（用于拼接完整URL存入数据库）
+  baseUrl: process.env.STATIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}/static`,
+  // 上传文件配置
+  upload: {
+    // 头像上传目录
+    avatarDir: 'uploads/avatars',
+    // 头像最大大小 2MB
+    maxSize: 2 * 1024 * 1024,
+    // 允许的图片类型
+    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  },
 }
