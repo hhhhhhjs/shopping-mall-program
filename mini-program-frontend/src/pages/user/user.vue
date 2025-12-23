@@ -132,7 +132,8 @@ function goToProfileEdit() {
 
 <style lang="scss" scoped>
 .user-page {
-  height: 100vh;
+  height: 100%;
+  min-height: 100%;
   background: #fff;
   overflow: hidden;
   display: flex;

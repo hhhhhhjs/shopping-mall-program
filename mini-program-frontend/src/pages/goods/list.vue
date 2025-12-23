@@ -249,10 +249,15 @@ function handleGoodsClick(goods: GoodsItem) {
 
 <style lang="scss" scoped>
 .goods-list-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   background: #f5f7fa;
+  overflow: hidden;
 }
 
 .status-bar {
@@ -273,12 +278,8 @@ function handleGoodsClick(goods: GoodsItem) {
 
 .goods-scroll {
   flex: 1;
+  height: 0;
   overflow: hidden;
-
-  // 隐藏滚动条
-  &::-webkit-scrollbar {
-    display: none;
-  }
 }
 
 .goods-grid {
