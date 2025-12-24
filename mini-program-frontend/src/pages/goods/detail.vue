@@ -26,6 +26,9 @@ const { goods, loading, getGoodsPrice, formatPrice, toggleFavorite } = useGoodsD
 // 当前轮播索引
 const currentIndex = ref(0)
 
+// 库存显示/隐藏状态
+const showStock = ref(true)
+
 // 获取路由参数
 const goodsId = ref<number>(0)
 
@@ -69,11 +72,18 @@ onMounted(() => {
 
   // 模拟加载数据
   goods.value = mockGoods
+  // 初始化库存显示状态
+  showStock.value = mockGoods.showStock || false
 })
 
 // 轮播切换
 function handleSwiperChange(e: any) {
   currentIndex.value = e.detail.current
+}
+
+// 切换库存显示/隐藏
+function toggleStockVisibility() {
+  showStock.value = !showStock.value
 }
 
 // 返回上一页
@@ -184,9 +194,19 @@ function handleBuyNow() {
           </view>
 
           <!-- 库存信息 -->
-          <view v-if="goods.showStock" class="goods-stock">
-            <text class="stock-label">库存</text>
-            <text class="stock-value">{{ goods.stock }} 件</text>
+          <view class="goods-stock">
+            <view class="stock-left">
+              <text class="stock-label">库存</text>
+              <text v-if="showStock" class="stock-value">{{ goods.stock }} 件</text>
+              <text v-else class="stock-value">***</text>
+            </view>
+            <view class="stock-toggle" @tap="toggleStockVisibility">
+              <wd-icon
+                :name="showStock ? 'view' : 'eye-close'"
+                size="20px"
+                color="#6b7280"
+              />
+            </view>
           </view>
         </view>
 
@@ -412,8 +432,35 @@ function handleBuyNow() {
 }
 
 .goods-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-top: none;
   padding-top: 0;
+
+  .stock-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .stock-label {
+    font-size: 28rpx;
+    color: #6b7280;
+    width: 80rpx;
+  }
+
+  .stock-value {
+    font-size: 28rpx;
+    color: #1e293b;
+  }
+
+  .stock-toggle {
+    padding: 8rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
 }
 
 // 商品详情
