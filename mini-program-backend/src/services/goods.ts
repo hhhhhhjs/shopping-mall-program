@@ -14,18 +14,27 @@ import type {
 
 /**
  * 安全解析 images JSON 字段
+ * 注意：mysql2 对 JSON 类型字段可能已自动解析为数组
+ * 返回空数组而不是 null，确保前端处理一致性
  */
-function parseImages(images: string | null): string[] | null {
+function parseImages(images: string | string[] | null): string[] {
   if (!images) {
-    return null
+    return []
   }
-  try {
-    const parsed = JSON.parse(images)
-    return Array.isArray(parsed) ? parsed : null
-  } catch {
-    // 如果解析失败，可能是纯 URL 字符串，返回 null
-    return null
+  // 如果已经是数组，直接返回
+  if (Array.isArray(images)) {
+    return images
   }
+  // 如果是字符串，尝试解析 JSON
+  if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
 }
 
 /**
@@ -94,7 +103,7 @@ export async function getGoodsList(
 ): Promise<GoodsListResponse> {
   const {
     keyword,
-    categoryId,
+    categoryIds,
     supportPoints,
     sortField = 'createdAt',
     sortOrder = 'desc',
@@ -113,10 +122,11 @@ export async function getGoodsList(
     values.push(`%${keyword}%`)
   }
 
-  // 分类筛选
-  if (categoryId !== undefined) {
-    conditions.push('g.category_id = ?')
-    values.push(categoryId)
+  // 分类筛选（支持多选）
+  if (categoryIds && categoryIds.length > 0) {
+    const placeholders = categoryIds.map(() => '?').join(', ')
+    conditions.push(`g.category_id IN (${placeholders})`)
+    values.push(...categoryIds)
   }
 
   // 积分兑换筛选

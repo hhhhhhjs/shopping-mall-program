@@ -28,7 +28,7 @@ export function useGoodsList() {
   // 查询参数
   const params = reactive<GoodsListParams>({
     keyword: '',
-    categoryId: undefined,
+    categoryIds: undefined,
     supportPoints: undefined,
     sortField: 'createdAt',
     sortOrder: 'desc',
@@ -63,7 +63,7 @@ export function useGoodsList() {
    */
   function resetFilters() {
     params.keyword = ''
-    params.categoryId = undefined
+    params.categoryIds = undefined
     params.supportPoints = undefined
     params.sortField = 'createdAt'
     params.sortOrder = 'desc'
@@ -80,10 +80,10 @@ export function useGoodsList() {
   }
 
   /**
-   * 设置分类筛选
+   * 设置分类筛选（支持多选）
    */
-  function setCategory(categoryId: number | undefined) {
-    params.categoryId = categoryId
+  function setCategory(categoryIds: number[] | undefined) {
+    params.categoryIds = categoryIds
     params.page = 1
   }
 

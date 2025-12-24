@@ -60,15 +60,18 @@ function handleClearSearch() {
   loadGoodsList(true)
 }
 
-// 分类筛选变化
-function handleCategoryChange(id: number | undefined) {
-  setCategory(id)
-  loadGoodsList(true)
+// 分类筛选变化（支持多选）
+function handleCategoryChange(ids: number[] | undefined) {
+  setCategory(ids)
 }
 
 // 积分筛选变化
 function handlePointsChange(value: boolean | undefined) {
   setSupportPoints(value)
+}
+
+// 筛选确认
+function handleFilterConfirm() {
   loadGoodsList(true)
 }
 
@@ -112,13 +115,14 @@ function handleScrollToLower() {
     <!-- 筛选栏 -->
     <GoodsFilter
       :categories="categories"
-      :category-id="params.categoryId"
+      :category-ids="params.categoryIds"
       :support-points="params.supportPoints"
       :sort-options="sortOptions"
       :current-sort="currentSort"
-      @update:category-id="handleCategoryChange"
+      @update:category-ids="handleCategoryChange"
       @update:support-points="handlePointsChange"
       @update:current-sort="handleSortChange"
+      @confirm="handleFilterConfirm"
     />
 
     <!-- 商品列表 -->

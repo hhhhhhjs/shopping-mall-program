@@ -1,14 +1,14 @@
 /**
  * 商品相关 API
  */
-import { httpGet, httpPost, httpDelete } from '@/http/http'
-import type { GoodsItem, GoodsListParams, GoodsListResponse, GoodsCategory } from '@/types/goods'
+import type { GoodsCategory, GoodsItem, GoodsListParams, GoodsListResponse } from '@/types/goods'
+import { httpDelete, httpGet, httpPost } from '@/http/http'
 
 /**
  * 获取商品列表
  */
 export function getGoodsList(params: GoodsListParams): Promise<GoodsListResponse> {
-  return httpGet('/goods/list', params)
+  return httpPost('/goods/list', params)
 }
 
 /**

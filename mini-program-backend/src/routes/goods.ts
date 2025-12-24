@@ -60,31 +60,39 @@ router.get('/categories', async (ctx) => {
 
 /**
  * 获取商品列表
- * GET /goods/list
+ * POST /goods/list
  */
-router.get('/list', async (ctx) => {
+router.post('/list', async (ctx) => {
   try {
     const {
       keyword,
-      categoryId,
+      categoryIds,
       supportPoints,
       sortField,
       sortOrder,
       page,
       pageSize,
-    } = ctx.query as Record<string, string | undefined>
+    } = ctx.request.body as {
+      keyword?: string
+      categoryIds?: number[]
+      supportPoints?: boolean
+      sortField?: string
+      sortOrder?: string
+      page?: number
+      pageSize?: number
+    }
 
     const userId = getUserIdFromHeader(ctx)
     const userLevel = await getUserLevelFromHeader(ctx)
 
     const params: GoodsListParams = {
       keyword: keyword || undefined,
-      categoryId: categoryId ? Number(categoryId) : undefined,
-      supportPoints: supportPoints === 'true' ? true : supportPoints === 'false' ? false : undefined,
+      categoryIds: Array.isArray(categoryIds) && categoryIds.length > 0 ? categoryIds : undefined,
+      supportPoints: supportPoints,
       sortField: sortField === 'price' || sortField === 'createdAt' ? sortField : undefined,
       sortOrder: sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : undefined,
-      page: page ? Number(page) : 1,
-      pageSize: pageSize ? Number(pageSize) : 10,
+      page: page || 1,
+      pageSize: pageSize || 10,
       userLevel,
     }
 
@@ -94,7 +102,8 @@ router.get('/list', async (ctx) => {
       message: 'ok',
       data: result,
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('获取商品列表失败:', error)
     ctx.body = {
       code: -1,

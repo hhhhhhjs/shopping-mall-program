@@ -19,8 +19,8 @@ export interface GoodsItem {
   name: string
   /** 商品主图 */
   image: string
-  /** 商品图片列表（轮播图） */
-  images?: string[] | null
+  /** 商品图片列表（轮播图），始终返回数组 */
+  images: string[]
   /** 商品简介 */
   description?: string | null
   /** 商品规格/型号 */
@@ -61,8 +61,8 @@ export interface GoodsItem {
 export interface GoodsListParams {
   /** 关键词搜索 */
   keyword?: string
-  /** 分类ID */
-  categoryId?: number
+  /** 分类ID列表（支持多选） */
+  categoryIds?: number[]
   /** 是否支持积分兑换 */
   supportPoints?: boolean
   /** 排序字段 */
@@ -90,7 +90,7 @@ export interface GoodsRecord {
   id: number
   name: string
   image: string
-  images: string | null
+  images: string | string[] | null  // mysql2 可能自动解析 JSON 为数组
   description: string | null
   spec: string | null
   category_id: number

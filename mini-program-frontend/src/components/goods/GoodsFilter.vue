@@ -8,8 +8,8 @@ import { computed, ref } from 'vue'
 interface Props {
   /** 分类列表 */
   categories: GoodsCategory[]
-  /** 当前选中的分类ID */
-  categoryId?: number
+  /** 当前选中的分类ID列表（支持多选） */
+  categoryIds?: number[]
   /** 是否只显示支持积分兑换 */
   supportPoints?: boolean
   /** 排序选项列表 */
@@ -21,9 +21,10 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  (e: 'update:categoryId', value: number | undefined): void
+  (e: 'update:categoryIds', value: number[] | undefined): void
   (e: 'update:supportPoints', value: boolean | undefined): void
   (e: 'update:currentSort', value: SortOption): void
+  (e: 'confirm'): void
   (e: 'reset'): void
 }>()
 
@@ -33,24 +34,32 @@ const showFilter = ref(false)
 const showSort = ref(false)
 
 // 临时选中状态
-const tempCategoryId = ref<number | undefined>(props.categoryId)
+const tempCategoryIds = ref<number[]>(props.categoryIds ?? [])
 const tempSupportPoints = ref<boolean | undefined>(props.supportPoints)
 
 // 是否有筛选条件
 const hasFilter = computed(() => {
-  return props.categoryId !== undefined || props.supportPoints !== undefined
+  return (props.categoryIds && props.categoryIds.length > 0) || props.supportPoints !== undefined
 })
 
 // 打开筛选弹窗
 function openFilter() {
-  tempCategoryId.value = props.categoryId
+  tempCategoryIds.value = props.categoryIds ? [...props.categoryIds] : []
   tempSupportPoints.value = props.supportPoints
   showFilter.value = true
 }
 
-// 选择分类
-function selectCategory(id: number | undefined) {
-  tempCategoryId.value = tempCategoryId.value === id ? undefined : id
+// 选择分类（多选）
+function selectCategory(id: number) {
+  const index = tempCategoryIds.value.indexOf(id)
+  if (index > -1) {
+    // 已选中，移除
+    tempCategoryIds.value.splice(index, 1)
+  }
+  else {
+    // 未选中，添加
+    tempCategoryIds.value.push(id)
+  }
 }
 
 // 切换积分兑换筛选
@@ -60,15 +69,17 @@ function togglePoints() {
 
 // 重置筛选
 function resetFilter() {
-  tempCategoryId.value = undefined
+  tempCategoryIds.value = []
   tempSupportPoints.value = undefined
 }
 
 // 确认筛选
 function confirmFilter() {
-  emit('update:categoryId', tempCategoryId.value)
+  emit('update:categoryIds', tempCategoryIds.value.length > 0 ? [...tempCategoryIds.value] : undefined)
   emit('update:supportPoints', tempSupportPoints.value)
   showFilter.value = false
+  // 确认后触发加载
+  emit('confirm')
 }
 
 // 选择排序
@@ -160,11 +171,11 @@ function closePopup() {
               v-for="cat in categories"
               :key="cat.id"
               class="category-item"
-              :class="{ active: tempCategoryId === cat.id }"
+              :class="{ active: tempCategoryIds.includes(cat.id) }"
               @tap="selectCategory(cat.id)"
             >
               <text class="category-text">{{ cat.name }}</text>
-              <view v-if="tempCategoryId === cat.id" class="category-check">
+              <view v-if="tempCategoryIds.includes(cat.id)" class="category-check">
                 <wd-icon name="check" size="16px" color="#fff" />
               </view>
             </view>
@@ -195,7 +206,7 @@ function closePopup() {
       <!-- 确认按钮 -->
       <view class="filter-footer">
         <button class="confirm-btn" @tap="confirmFilter">
-          <text class="btn-text">确定</text>
+          <text class="btn-text">确定 </text>
         </button>
       </view>
 
