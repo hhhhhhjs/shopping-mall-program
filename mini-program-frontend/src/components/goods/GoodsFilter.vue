@@ -2,8 +2,8 @@
 /**
  * 商品筛选组件
  */
-import { ref, computed } from 'vue'
 import type { GoodsCategory, SortOption } from '@/types/goods'
+import { computed, ref } from 'vue'
 
 interface Props {
   /** 分类列表 */
@@ -263,6 +263,7 @@ function closePopup() {
 
   .sort-list {
     padding: 16rpx 0;
+    margin-bottom: 100rpx; /* tabbar 高度 */
   }
 
   .sort-item {
@@ -299,9 +300,9 @@ function closePopup() {
     }
   }
 
-  // 底部安全区域
+  // 底部安全区域 + tabbar 高度
   .popup-safe-area {
-    height: env(safe-area-inset-bottom);
+    height: calc(env(safe-area-inset-bottom) + 100rpx);
     background: #fff;
   }
 }

@@ -2,9 +2,8 @@
 /**
  * 商品详情页
  */
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useGoodsDetail } from '@/hooks/useGoods'
-import type { GoodsItem } from '@/types/goods'
 
 defineOptions({
   name: 'GoodsDetail',
@@ -21,7 +20,7 @@ definePage({
 const systemInfo = uni.getSystemInfoSync()
 const statusBarHeight = computed(() => systemInfo.statusBarHeight || 44)
 
-const { goods, loading, getGoodsPrice, formatPrice, toggleFavorite } = useGoodsDetail()
+const { goods, loading, loadGoodsDetail, getGoodsPrice, formatPrice, toggleFavorite } = useGoodsDetail()
 
 // 当前轮播索引
 const currentIndex = ref(0)
@@ -29,51 +28,24 @@ const currentIndex = ref(0)
 // 库存显示/隐藏状态
 const showStock = ref(true)
 
-// 获取路由参数
-const goodsId = ref<number>(0)
-
 // 轮播图列表
 const swiperImages = computed(() => {
-  if (!goods.value) return []
+  if (!goods.value) {
+    return []
+  }
   return goods.value.images?.length ? goods.value.images : [goods.value.image]
 })
-
-// 模拟数据
-const mockGoods: GoodsItem = {
-  id: 1,
-  name: 'A4打印纸 70g 500张/包 高品质办公用纸 不卡纸',
-  image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-  images: [
-    'https://img.yzcdn.cn/vant/cat.jpeg',
-    'https://img.yzcdn.cn/vant/cat.jpeg',
-    'https://img.yzcdn.cn/vant/cat.jpeg',
-  ],
-  description: '高品质A4打印纸，70g加厚设计，不易卡纸，打印清晰，适用于各类打印机、复印机。每包500张，经济实惠。',
-  spec: '70g / 500张/包',
-  categoryId: 1,
-  categoryName: '办公用品',
-  stock: 1000,
-  showStock: true,
-  price1: 28.00,
-  price2: 26.00,
-  price3: 24.00,
-  price4: 22.00,
-  supportPoints: true,
-  pointsPrice: 280,
-  isFavorite: false,
-}
 
 onMounted(() => {
   // 获取路由参数
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1] as any
   const options = currentPage?.options || {}
-  goodsId.value = Number(options.id) || 0
+  const goodsId = Number(options.id) || 0
 
-  // 模拟加载数据
-  goods.value = mockGoods
-  // 初始化库存显示状态
-  showStock.value = mockGoods.showStock || false
+  if (goodsId) {
+    loadGoodsDetail(goodsId)
+  }
 })
 
 // 轮播切换
@@ -84,6 +56,11 @@ function handleSwiperChange(e: any) {
 // 切换库存显示/隐藏
 function toggleStockVisibility() {
   showStock.value = !showStock.value
+}
+
+// 跳转到购物车
+function goToCart() {
+  uni.switchTab({ url: '/pages/cart/index' })
 }
 
 // 返回上一页
@@ -126,7 +103,7 @@ function handleBuyNow() {
 <template>
   <view class="goods-detail-page">
     <!-- 自定义导航栏 -->
-    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px', height: (44 + statusBarHeight) + 'px' }">
+    <view class="nav-bar" :style="{ paddingTop: `${statusBarHeight}px`, height: `${44 + statusBarHeight}px` }">
       <view class="nav-back" @tap="goBack">
         <wd-icon name="arrow-left" size="22px" color="#333" />
       </view>
@@ -239,15 +216,19 @@ function handleBuyNow() {
         </view>
 
         <!-- 购物车按钮 -->
-        <view class="action-icon-btn" @tap="() => uni.switchTab({ url: '/pages/cart/index' })">
+        <view class="action-icon-btn" @tap="goToCart">
           <wd-icon name="cart" size="24px" color="#666" />
           <text>购物车</text>
         </view>
       </view>
 
       <view class="action-right">
-        <button class="btn-cart" @tap="handleAddToCart">加入购物车</button>
-        <button class="btn-buy" @tap="handleBuyNow">立即购买</button>
+        <button class="btn-cart" @tap="handleAddToCart">
+          加入购物车
+        </button>
+        <button class="btn-buy" @tap="handleBuyNow">
+          立即购买
+        </button>
       </view>
     </view>
   </view>

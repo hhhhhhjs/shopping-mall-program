@@ -1,9 +1,10 @@
 /**
  * 商品模块业务逻辑 Hook
  */
-import { ref, computed, reactive } from 'vue'
+import type { GoodsCategory, GoodsItem, GoodsListParams, SortOption } from '@/types/goods'
+import { reactive, ref } from 'vue'
+import { favoriteGoods, getGoodsCategories, getGoodsDetail, getGoodsList, unfavoriteGoods } from '@/api/goods'
 import { useUserStore } from '@/store/user'
-import type { GoodsItem, GoodsListParams, GoodsCategory, SortOption } from '@/types/goods'
 
 /** 排序选项列表 */
 export const sortOptions: SortOption[] = [
@@ -104,6 +105,75 @@ export function useGoodsList() {
     params.page = 1
   }
 
+  /**
+   * 加载分类列表
+   */
+  async function loadCategories() {
+    try {
+      const result = await getGoodsCategories()
+      categories.value = result
+    }
+    catch (error) {
+      console.error('加载分类失败:', error)
+    }
+  }
+
+  /**
+   * 加载商品列表
+   */
+  async function loadGoodsList(reset: boolean = false) {
+    if (loading.value) {
+      return
+    }
+
+    if (reset) {
+      params.page = 1
+      goodsList.value = []
+      hasMore.value = true
+    }
+
+    if (!hasMore.value) {
+      return
+    }
+
+    loading.value = true
+    try {
+      const result = await getGoodsList(params)
+      if (reset) {
+        goodsList.value = result.list
+      }
+      else {
+        goodsList.value = [...goodsList.value, ...result.list]
+      }
+      hasMore.value = goodsList.value.length < result.total
+      params.page = (params.page || 1) + 1
+    }
+    catch (error) {
+      console.error('加载商品列表失败:', error)
+    }
+    finally {
+      loading.value = false
+      refreshing.value = false
+    }
+  }
+
+  /**
+   * 下拉刷新
+   */
+  async function refresh() {
+    refreshing.value = true
+    await loadGoodsList(true)
+  }
+
+  /**
+   * 上拉加载更多
+   */
+  async function loadMore() {
+    if (!loading.value && hasMore.value) {
+      await loadGoodsList(false)
+    }
+  }
+
   return {
     // 数据
     goodsList,
@@ -122,6 +192,10 @@ export function useGoodsList() {
     setCategory,
     setSupportPoints,
     setSort,
+    loadCategories,
+    loadGoodsList,
+    refresh,
+    loadMore,
   }
 }
 
@@ -135,10 +209,32 @@ export function useGoodsDetail() {
   const loading = ref(false)
 
   /**
+   * 加载商品详情
+   */
+  async function loadGoodsDetail(goodsId: number) {
+    if (!goodsId) {
+      return
+    }
+    loading.value = true
+    try {
+      const result = await getGoodsDetail(goodsId)
+      goods.value = result
+    }
+    catch (error) {
+      console.error('加载商品详情失败:', error)
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * 根据用户等级获取商品价格
    */
   function getGoodsPrice(): number {
-    if (!goods.value) return 0
+    if (!goods.value) {
+      return 0
+    }
     const userLevel = userStore.userInfo?.level || 1
     const priceKey = `price${userLevel}` as keyof GoodsItem
     return (goods.value[priceKey] as number) || goods.value.price1
@@ -155,14 +251,31 @@ export function useGoodsDetail() {
    * 切换收藏状态
    */
   async function toggleFavorite() {
-    if (!goods.value) return
-    goods.value.isFavorite = !goods.value.isFavorite
-    // TODO: 调用收藏/取消收藏 API
+    if (!goods.value) {
+      return
+    }
+    const wasFavorite = goods.value.isFavorite
+    // 乐观更新
+    goods.value.isFavorite = !wasFavorite
+    try {
+      if (wasFavorite) {
+        await unfavoriteGoods(goods.value.id)
+      }
+      else {
+        await favoriteGoods(goods.value.id)
+      }
+    }
+    catch (error) {
+      // 回滚
+      goods.value.isFavorite = wasFavorite
+      console.error('收藏操作失败:', error)
+    }
   }
 
   return {
     goods,
     loading,
+    loadGoodsDetail,
     getGoodsPrice,
     formatPrice,
     toggleFavorite,

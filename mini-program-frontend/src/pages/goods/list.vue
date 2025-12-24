@@ -2,12 +2,12 @@
 /**
  * 商品列表页
  */
-import { ref, onMounted, computed } from 'vue'
-import { useGoodsList, sortOptions } from '@/hooks/useGoods'
-import type { GoodsItem, GoodsCategory } from '@/types/goods'
+import type { GoodsItem } from '@/types/goods'
+import { computed, onMounted } from 'vue'
 import GoodsCard from '@/components/goods/GoodsCard.vue'
-import GoodsSearch from '@/components/goods/GoodsSearch.vue'
 import GoodsFilter from '@/components/goods/GoodsFilter.vue'
+import GoodsSearch from '@/components/goods/GoodsSearch.vue'
+import { sortOptions, useGoodsList } from '@/hooks/useGoods'
 
 defineOptions({
   name: 'GoodsList',
@@ -31,144 +31,51 @@ const {
   params,
   categories,
   currentSort,
+  hasMore,
   getGoodsPrice,
   setKeyword,
   setCategory,
   setSupportPoints,
   setSort,
+  loadCategories,
+  loadGoodsList,
+  loadMore,
 } = useGoodsList()
 
-// 搜索关键词
-const keyword = ref('')
-
-// 模拟数据
-const mockCategories: GoodsCategory[] = [
-  { id: 1, name: '办公用品' },
-  { id: 2, name: '电子设备' },
-  { id: 3, name: '劳保用品' },
-  { id: 4, name: '清洁用品' },
-  { id: 5, name: '包装材料' },
-]
-
-const mockGoodsList: GoodsItem[] = [
-  {
-    id: 1,
-    name: 'A4打印纸 70g 500张/包 办公用纸',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 1,
-    stock: 1000,
-    showStock: false,
-    price1: 28.00,
-    price2: 26.00,
-    price3: 24.00,
-    price4: 22.00,
-    supportPoints: true,
-    pointsPrice: 280,
-  },
-  {
-    id: 2,
-    name: '中性笔黑色0.5mm 办公签字笔 12支装',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 1,
-    stock: 500,
-    showStock: true,
-    price1: 15.00,
-    price2: 14.00,
-    price3: 13.00,
-    price4: 12.00,
-    supportPoints: false,
-  },
-  {
-    id: 3,
-    name: '无线蓝牙鼠标 静音办公 可充电',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 2,
-    stock: 200,
-    showStock: true,
-    price1: 89.00,
-    price2: 85.00,
-    price3: 80.00,
-    price4: 75.00,
-    supportPoints: true,
-    pointsPrice: 890,
-  },
-  {
-    id: 4,
-    name: '机械键盘 青轴104键 办公游戏两用',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 2,
-    stock: 150,
-    showStock: false,
-    price1: 199.00,
-    price2: 189.00,
-    price3: 179.00,
-    price4: 169.00,
-    supportPoints: false,
-  },
-  {
-    id: 5,
-    name: '防护手套 乳胶手套 一次性 100只装',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 3,
-    stock: 800,
-    showStock: true,
-    price1: 35.00,
-    price2: 32.00,
-    price3: 30.00,
-    price4: 28.00,
-    supportPoints: true,
-    pointsPrice: 350,
-  },
-  {
-    id: 6,
-    name: '安全帽 ABS材质 防砸防撞 工地施工',
-    image: 'https://img.yzcdn.cn/vant/cat.jpeg',
-    categoryId: 3,
-    stock: 300,
-    showStock: false,
-    price1: 45.00,
-    price2: 42.00,
-    price3: 40.00,
-    price4: 38.00,
-    supportPoints: false,
-  },
-]
-
 onMounted(() => {
-  // 模拟加载数据
-  categories.value = mockCategories
-  goodsList.value = mockGoodsList
+  // 加载分类和商品列表
+  loadCategories()
+  loadGoodsList(true)
 })
 
 // 搜索
 function handleSearch(value: string) {
   setKeyword(value)
-  // TODO: 调用 API 获取数据
-  console.log('搜索:', value)
+  loadGoodsList(true)
 }
 
 // 清空搜索
 function handleClearSearch() {
   setKeyword('')
-  // TODO: 重新加载数据
+  loadGoodsList(true)
 }
 
 // 分类筛选变化
 function handleCategoryChange(id: number | undefined) {
   setCategory(id)
-  // TODO: 重新加载数据
+  loadGoodsList(true)
 }
 
 // 积分筛选变化
 function handlePointsChange(value: boolean | undefined) {
   setSupportPoints(value)
-  // TODO: 重新加载数据
+  loadGoodsList(true)
 }
 
 // 排序变化
 function handleSortChange(sort: typeof currentSort.value) {
   setSort(sort)
-  // TODO: 重新加载数据
+  loadGoodsList(true)
 }
 
 // 点击商品
@@ -177,12 +84,17 @@ function handleGoodsClick(goods: GoodsItem) {
     url: `/pages/goods/detail?id=${goods.id}`,
   })
 }
+
+// 上拉加载更多
+function handleScrollToLower() {
+  loadMore()
+}
 </script>
 
 <template>
   <view class="goods-list-page">
     <!-- 顶部安全区域 -->
-    <view class="status-bar" :style="{ height: statusBarHeight + 'px' }" />
+    <view class="status-bar" :style="{ height: `${statusBarHeight}px` }" />
 
     <!-- 页面标题 -->
     <view class="page-header">
@@ -191,7 +103,7 @@ function handleGoodsClick(goods: GoodsItem) {
 
     <!-- 搜索栏 -->
     <GoodsSearch
-      v-model="keyword"
+      :model-value="params.keyword"
       placeholder="搜索商品名称"
       @search="handleSearch"
       @clear="handleClearSearch"
@@ -215,6 +127,7 @@ function handleGoodsClick(goods: GoodsItem) {
       scroll-y
       enhanced
       :show-scrollbar="false"
+      @scrolltolower="handleScrollToLower"
     >
       <view class="goods-grid">
         <view
@@ -231,8 +144,14 @@ function handleGoodsClick(goods: GoodsItem) {
       </view>
 
       <!-- 底部提示 -->
-      <view v-if="goodsList.length > 0" class="list-footer">
+      <view v-if="goodsList.length > 0 && !hasMore" class="list-footer">
         <text>已加载全部商品</text>
+      </view>
+
+      <!-- 加载中 -->
+      <view v-if="loading && goodsList.length > 0" class="list-footer">
+        <wd-loading size="20px" />
+        <text>加载中...</text>
       </view>
 
       <!-- 空状态 -->

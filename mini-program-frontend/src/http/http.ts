@@ -100,6 +100,8 @@ export function http<T>(options: CustomRequestOptions) {
               icon: 'none',
               title: responseData.msg || responseData.message || '请求错误',
             })
+            // 业务错误时拒绝 Promise，避免返回 null 导致调用方报错
+            return reject(new Error(responseData.msg || responseData.message || '请求错误'))
           }
           return resolve(responseData.data)
         }

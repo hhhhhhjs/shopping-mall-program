@@ -1,6 +1,7 @@
 import Router from 'koa-router'
 import authRouter from './auth'
 import userRouter from './user'
+import goodsRouter from './goods'
 
 const router = new Router()
 
@@ -19,5 +20,6 @@ router.get('/health', async (ctx) => {
 // 挂载子路由
 router.use(authRouter.routes(), authRouter.allowedMethods())
 router.use(userRouter.routes(), userRouter.allowedMethods())
+router.use(goodsRouter.routes(), goodsRouter.allowedMethods())
 
 export default router
