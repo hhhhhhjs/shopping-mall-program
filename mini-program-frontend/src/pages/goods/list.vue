@@ -3,7 +3,7 @@
  * 商品列表页
  */
 import type { GoodsItem } from '@/types/goods'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import GoodsCard from '@/components/goods/GoodsCard.vue'
 import GoodsFilter from '@/components/goods/GoodsFilter.vue'
 import GoodsSearch from '@/components/goods/GoodsSearch.vue'
@@ -41,6 +41,31 @@ const {
   loadGoodsList,
   loadMore,
 } = useGoodsList()
+
+// 瀑布流相关状态
+const leftList = ref<GoodsItem[]>([])
+const rightList = ref<GoodsItem[]>([])
+
+// 将商品分配到左右两列（简化版，只用索引分配）
+function distributeGoods() {
+  leftList.value = []
+  rightList.value = []
+
+  goodsList.value.forEach((goods, index) => {
+    // 奇数放左边，偶数放右边
+    if (index % 2 === 0) {
+      leftList.value.push(goods)
+    }
+    else {
+      rightList.value.push(goods)
+    }
+  })
+}
+
+// 监听商品列表变化，重新分配
+watch(goodsList, () => {
+  distributeGoods()
+}, { immediate: true })
 
 onMounted(() => {
   // 加载分类和商品列表
@@ -125,7 +150,7 @@ function handleScrollToLower() {
       @confirm="handleFilterConfirm"
     />
 
-    <!-- 商品列表 -->
+    <!-- 商品列表 - 瀑布流 -->
     <scroll-view
       class="goods-scroll"
       scroll-y
@@ -133,17 +158,37 @@ function handleScrollToLower() {
       :show-scrollbar="false"
       @scrolltolower="handleScrollToLower"
     >
-      <view class="goods-grid">
-        <view
-          v-for="goods in goodsList"
-          :key="goods.id"
-          class="goods-grid-item"
-        >
-          <GoodsCard
-            :goods="goods"
-            :price="getGoodsPrice(goods)"
-            @click="handleGoodsClick"
-          />
+      <view class="waterfall-container">
+        <!-- 左列 -->
+        <view class="waterfall-column">
+          <view
+            v-for="goods in leftList"
+            :key="goods.id"
+            class="waterfall-item"
+          >
+            <GoodsCard
+              :goods="goods"
+              :price="getGoodsPrice(goods)"
+              :waterfall="true"
+              @click="handleGoodsClick"
+            />
+          </view>
+        </view>
+
+        <!-- 右列 -->
+        <view class="waterfall-column">
+          <view
+            v-for="goods in rightList"
+            :key="goods.id"
+            class="waterfall-item"
+          >
+            <GoodsCard
+              :goods="goods"
+              :price="getGoodsPrice(goods)"
+              :waterfall="true"
+              @click="handleGoodsClick"
+            />
+          </view>
         </view>
       </view>
 
@@ -205,14 +250,23 @@ function handleScrollToLower() {
   overflow: hidden;
 }
 
-.goods-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
+// 瀑布流容器
+.waterfall-container {
+  display: flex;
   padding: 20rpx;
+  gap: 20rpx;
 }
 
-.goods-grid-item {
+// 瀑布流列
+.waterfall-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+// 瀑布流单项
+.waterfall-item {
   width: 100%;
 }
 

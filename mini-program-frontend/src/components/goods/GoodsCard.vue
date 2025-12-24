@@ -3,19 +3,28 @@
  * 商品卡片组件
  */
 import type { GoodsItem } from '@/types/goods'
+import { ref } from 'vue'
 
 interface Props {
   /** 商品数据 */
   goods: GoodsItem
   /** 显示的价格（根据用户等级） */
   price: number
+  /** 是否为瀑布流模式 */
+  waterfall?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  waterfall: false,
+})
 
 const emit = defineEmits<{
   (e: 'click', goods: GoodsItem): void
+  (e: 'imageLoad', height: number): void
 }>()
+
+// 图片高度
+const imageHeight = ref(0)
 
 function handleClick() {
   emit('click', props.goods)
@@ -24,17 +33,27 @@ function handleClick() {
 function formatPrice(price: number): string {
   return price.toFixed(2)
 }
+
+// 图片加载完成
+function handleImageLoad(e: any) {
+  if (props.waterfall && e.detail) {
+    const { height } = e.detail
+    imageHeight.value = height
+    emit('imageLoad', height)
+  }
+}
 </script>
 
 <template>
   <view class="goods-card" @tap="handleClick">
     <!-- 商品图片 -->
-    <view class="goods-image-wrapper">
+    <view class="goods-image-wrapper" :class="{ waterfall: waterfall }">
       <image
         class="goods-image"
         :src="goods.image"
-        mode="aspectFill"
+        :mode="waterfall ? 'widthFix' : 'aspectFill'"
         lazy-load
+        @load="handleImageLoad"
       />
       <!-- 积分兑换标签 -->
       <view v-if="goods.supportPoints" class="points-tag">
@@ -75,11 +94,15 @@ function formatPrice(price: number): string {
 .goods-image-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+
+  &:not(.waterfall) {
+    aspect-ratio: 1;
+  }
 
   .goods-image {
     width: 100%;
     height: 100%;
+    display: block;
   }
 
   .points-tag {
