@@ -74,10 +74,6 @@ function handleImageLoad(e: any) {
           <text class="price-symbol">¥</text>
           <text class="price-value">{{ formatPrice(price) }}</text>
         </view>
-        <!-- 库存显示 -->
-        <view v-if="goods.showStock" class="stock-info">
-          <text>库存 {{ goods.stock }}</text>
-        </view>
       </view>
     </view>
   </view>
