@@ -2,6 +2,7 @@ import Router from 'koa-router'
 import authRouter from './auth'
 import userRouter from './user'
 import goodsRouter from './goods'
+import uploadRouter from './upload'
 
 const router = new Router()
 
@@ -21,5 +22,6 @@ router.get('/health', async (ctx) => {
 router.use(authRouter.routes(), authRouter.allowedMethods())
 router.use(userRouter.routes(), userRouter.allowedMethods())
 router.use(goodsRouter.routes(), goodsRouter.allowedMethods())
+router.use(uploadRouter.routes(), uploadRouter.allowedMethods())
 
 export default router

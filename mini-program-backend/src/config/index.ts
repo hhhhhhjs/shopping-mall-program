@@ -43,9 +43,22 @@ export const staticConfig = {
   upload: {
     // 头像上传目录
     avatarDir: 'uploads/avatars',
+    // 商品图片上传目录
+    goodsImageDir: 'images',
+    // 商品图片临时目录
+    tempDir: 'uploads/temp',
     // 头像最大大小 2MB
     maxSize: 2 * 1024 * 1024,
+    // 商品图片最大大小 10MB
+    goodsImageMaxSize: 10 * 1024 * 1024,
     // 允许的图片类型
     allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  },
+  // 图片处理配置
+  imageProcess: {
+    // 商品图片固定宽度
+    goodsImageWidth: 450,
+    // JPEG 压缩质量 (1-100)
+    jpegQuality: 80,
   },
 }

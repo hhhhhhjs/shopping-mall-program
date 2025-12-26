@@ -2,12 +2,13 @@
 /**
  * 商品列表页
  */
-import type { GoodsItem } from '@/types/goods'
-import { computed, onMounted, ref, watch } from 'vue'
+import type { GoodsCategory, GoodsItem, GoodsListParams, SortOption } from '@/types/goods'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { getGoodsCategories, getGoodsList } from '@/api/goods'
 import GoodsCard from '@/components/goods/GoodsCard.vue'
 import GoodsFilter from '@/components/goods/GoodsFilter.vue'
 import GoodsSearch from '@/components/goods/GoodsSearch.vue'
-import { sortOptions, useGoodsList } from '@/hooks/useGoods'
+import { useUserStore } from '@/store/user'
 
 defineOptions({
   name: 'GoodsList',
@@ -25,85 +26,176 @@ definePage({
 const systemInfo = uni.getSystemInfoSync()
 const statusBarHeight = computed(() => systemInfo.statusBarHeight || 44)
 
-const {
-  goodsList,
-  loading,
-  params,
-  categories,
-  currentSort,
-  hasMore,
-  getGoodsPrice,
-  setKeyword,
-  setCategory,
-  setSupportPoints,
-  setSort,
-  loadCategories,
-  loadGoodsList,
-  loadMore,
-} = useGoodsList()
+const userStore = useUserStore()
+
+// z-paging 实例
+const paging = ref<ZPagingInstance | null>(null)
 
 // 瀑布流相关状态
 const leftList = ref<GoodsItem[]>([])
 const rightList = ref<GoodsItem[]>([])
+const leftHeight = ref(0)
+const rightHeight = ref(0)
+// 内容区域固定高度（标题 + 价格 + 库存 + padding）
+const CONTENT_HEIGHT = 120
 
-// 将商品分配到左右两列（简化版，只用索引分配）
-function distributeGoods() {
+// 排序选项
+const sortOptions: SortOption[] = [
+  { label: '默认排序', field: 'createdAt', order: 'desc' },
+  { label: '价格升序', field: 'price', order: 'asc' },
+  { label: '价格降序', field: 'price', order: 'desc' },
+]
+
+// 查询参数
+const params = reactive<GoodsListParams>({
+  keyword: '',
+  categoryIds: undefined,
+  supportPoints: undefined,
+  sortField: 'createdAt',
+  sortOrder: 'desc',
+  page: 1,
+  pageSize: 10,
+})
+
+// 分类列表
+const categories = ref<GoodsCategory[]>([])
+
+// 当前排序
+const currentSort = ref<SortOption>(sortOptions[0])
+
+/**
+ * 根据用户等级获取商品价格
+ */
+function getGoodsPrice(goods: GoodsItem): number {
+  const userLevel = userStore.userInfo?.level || 1
+  const priceKey = `price${userLevel}` as keyof GoodsItem
+  return (goods[priceKey] as number) || goods.price1
+}
+
+/**
+ * 加载分类列表
+ */
+async function loadCategories() {
+  try {
+    const result = await getGoodsCategories()
+    categories.value = result
+  }
+  catch (error) {
+    console.error('加载分类失败:', error)
+  }
+}
+
+/**
+ * z-paging 查询回调
+ */
+async function queryList(pageNo: number, pageSize: number) {
+  try {
+    const result = await getGoodsList({
+      ...params,
+      page: pageNo,
+      pageSize,
+    })
+    // 通知 z-paging 数据加载完成
+    paging.value?.complete(result.list)
+  }
+  catch (error) {
+    console.error('加载商品列表失败:', error)
+    // 加载失败时通知 z-paging
+    paging.value?.complete(false)
+  }
+}
+
+/**
+ * 获取商品卡片高度
+ * 直接使用后端返回的 imageHeight + 固定内容区域高度
+ */
+function getCardHeight(goods: GoodsItem): number {
+  // 图片高度直接使用后端返回的值，默认450
+  const imageHeight = goods.imageHeight || 450
+  // 前端图片宽度约为335rpx，按比例转换后端450px的高度
+  const scale = 335 / 450
+  const scaledImageHeight = Math.round(imageHeight * scale)
+  return scaledImageHeight + CONTENT_HEIGHT
+}
+
+// 将商品分配到左右两列
+function distributeGoods(list: GoodsItem[]) {
+  console.log('========== 开始分配商品 ==========')
+  console.log('商品总数:', list.length)
+
   leftList.value = []
   rightList.value = []
+  leftHeight.value = 0
+  rightHeight.value = 0
 
-  goodsList.value.forEach((goods, index) => {
-    // 奇数放左边，偶数放右边
-    if (index % 2 === 0) {
+  list.forEach((goods, index) => {
+    // 直接使用后端返回的高度计算卡片高度
+    const cardHeight = getCardHeight(goods)
+
+    console.log(`[商品${index + 1}] ${goods.name}`)
+    console.log(`  - 后端图片高度: ${goods.imageHeight || 450}px`)
+    console.log(`  - 卡片总高度: ${cardHeight}`)
+    console.log(`  - 分配前: 左列=${leftHeight.value}, 右列=${rightHeight.value}`)
+
+    // 根据左右列高度分配，哪一列短就分配到哪一列
+    if (leftHeight.value <= rightHeight.value) {
       leftList.value.push(goods)
+      leftHeight.value += cardHeight
+      console.log(`  - 分配到: 左列`)
     }
     else {
       rightList.value.push(goods)
+      rightHeight.value += cardHeight
+      console.log(`  - 分配到: 右列`)
     }
+
+    console.log(`  - 分配后: 左列=${leftHeight.value}, 右列=${rightHeight.value}`)
   })
+
+  console.log('========== 分配结果 ==========')
+  console.log('左列商品数:', leftList.value.length, '总高度:', leftHeight.value)
+  console.log('右列商品数:', rightList.value.length, '总高度:', rightHeight.value)
+  console.log('高度差:', Math.abs(leftHeight.value - rightHeight.value))
 }
 
-// 监听商品列表变化，重新分配
-watch(goodsList, () => {
-  distributeGoods()
-}, { immediate: true })
-
 onMounted(() => {
-  // 加载分类和商品列表
+  // 加载分类列表
   loadCategories()
-  loadGoodsList(true)
 })
 
 // 搜索
 function handleSearch(value: string) {
-  setKeyword(value)
-  loadGoodsList(true)
+  params.keyword = value
+  paging.value?.reload()
 }
 
 // 清空搜索
 function handleClearSearch() {
-  setKeyword('')
-  loadGoodsList(true)
+  params.keyword = ''
+  paging.value?.reload()
 }
 
 // 分类筛选变化（支持多选）
 function handleCategoryChange(ids: number[] | undefined) {
-  setCategory(ids)
+  params.categoryIds = ids
 }
 
 // 积分筛选变化
 function handlePointsChange(value: boolean | undefined) {
-  setSupportPoints(value)
+  params.supportPoints = value
 }
 
 // 筛选确认
 function handleFilterConfirm() {
-  loadGoodsList(true)
+  paging.value?.reload()
 }
 
 // 排序变化
-function handleSortChange(sort: typeof currentSort.value) {
-  setSort(sort)
-  loadGoodsList(true)
+function handleSortChange(sort: SortOption) {
+  currentSort.value = sort
+  params.sortField = sort.field
+  params.sortOrder = sort.order
+  paging.value?.reload()
 }
 
 // 点击商品
@@ -111,11 +203,6 @@ function handleGoodsClick(goods: GoodsItem) {
   uni.navigateTo({
     url: `/pages/goods/detail?id=${goods.id}`,
   })
-}
-
-// 上拉加载更多
-function handleScrollToLower() {
-  loadMore()
 }
 </script>
 
@@ -150,17 +237,23 @@ function handleScrollToLower() {
       @confirm="handleFilterConfirm"
     />
 
-    <!-- 商品列表 - 瀑布流 -->
-    <scroll-view
-      class="goods-scroll"
-      scroll-y
-      enhanced
+    <!-- 商品列表 - 使用 z-paging 实现下拉刷新/上拉加载 -->
+    <z-paging
+      ref="paging"
+      class="goods-paging"
+      :fixed="false"
+      :use-page-scroll="false"
+      :default-page-size="10"
+      :auto="true"
       :show-scrollbar="false"
-      @scrolltolower="handleScrollToLower"
+      :safe-area-inset-bottom="true"
+      empty-view-text="暂无相关商品"
+      @query="queryList"
+      @list-change="distributeGoods"
     >
       <view class="waterfall-container">
         <!-- 左列 -->
-        <view class="waterfall-column">
+        <view class="waterfall-column waterfall-column-left">
           <view
             v-for="goods in leftList"
             :key="goods.id"
@@ -176,7 +269,7 @@ function handleScrollToLower() {
         </view>
 
         <!-- 右列 -->
-        <view class="waterfall-column">
+        <view class="waterfall-column waterfall-column-right">
           <view
             v-for="goods in rightList"
             :key="goods.id"
@@ -191,27 +284,7 @@ function handleScrollToLower() {
           </view>
         </view>
       </view>
-
-      <!-- 底部提示 -->
-      <view v-if="goodsList.length > 0 && !hasMore" class="list-footer">
-        <text>已加载全部商品</text>
-      </view>
-
-      <!-- 加载中 -->
-      <view v-if="loading && goodsList.length > 0" class="list-footer">
-        <wd-loading size="20px" />
-        <text>加载中...</text>
-      </view>
-
-      <!-- 空状态 -->
-      <view v-if="goodsList.length === 0 && !loading" class="empty-state">
-        <wd-icon name="search" size="80px" color="#d1d5db" />
-        <text class="empty-text">暂无相关商品</text>
-      </view>
-
-      <!-- 底部安全区域 -->
-      <view class="bottom-safe" />
-    </scroll-view>
+    </z-paging>
   </view>
 </template>
 
@@ -244,7 +317,7 @@ function handleScrollToLower() {
   }
 }
 
-.goods-scroll {
+.goods-paging {
   flex: 1;
   height: 0;
   overflow: hidden;
@@ -268,33 +341,5 @@ function handleScrollToLower() {
 // 瀑布流单项
 .waterfall-item {
   width: 100%;
-}
-
-.list-footer {
-  padding: 40rpx 0;
-  text-align: center;
-
-  text {
-    font-size: 26rpx;
-    color: #9ca3af;
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 120rpx 0;
-
-  .empty-text {
-    margin-top: 24rpx;
-    font-size: 28rpx;
-    color: #9ca3af;
-  }
-}
-
-.bottom-safe {
-  height: calc(20rpx + env(safe-area-inset-bottom));
 }
 </style>

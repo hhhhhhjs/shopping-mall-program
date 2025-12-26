@@ -125,6 +125,9 @@ CREATE TABLE IF NOT EXISTS `goods` (
   `name` VARCHAR(256) NOT NULL COMMENT '商品名称',
   `image` VARCHAR(512) NOT NULL COMMENT '商品主图URL',
   `images` JSON DEFAULT NULL COMMENT '商品图片列表（轮播图，JSON数组）',
+  `image_width` INT UNSIGNED DEFAULT 450 COMMENT '主图宽度（处理后，默认450px）',
+  `image_height` INT UNSIGNED DEFAULT 450 COMMENT '主图高度（处理后，按比例缩放）',
+  `image_aspect_ratio` DECIMAL(6,4) DEFAULT 1.0000 COMMENT '主图宽高比（width/height）',
   `description` TEXT DEFAULT NULL COMMENT '商品简介/详情',
   `spec` VARCHAR(128) DEFAULT NULL COMMENT '商品规格/型号',
   
@@ -175,11 +178,12 @@ INSERT INTO `goods_categories` (`name`, `icon`, `sort_order`) VALUES
 
 -- ============================================
 -- 初始化商品测试数据
+-- 注意：图片宽高字段使用默认值，实际上传时会更新
 -- ============================================
-INSERT INTO `goods` (`name`, `image`, `images`, `description`, `spec`, `category_id`, `stock`, `show_stock`, `price1`, `price2`, `price3`, `price4`, `support_points`, `points_price`, `sort_order`) VALUES
-('A4打印纸 70g 500张/包 办公用纸', 'https://img.yzcdn.cn/vant/cat.jpeg', '["https://img.yzcdn.cn/vant/cat.jpeg", "https://img.yzcdn.cn/vant/cat.jpeg"]', '高品质A4打印纸，70g加厚设计，不易卡纸，打印清晰，适用于各类打印机、复印机。每包500张，经济实惠。', '70g / 500张/包', 1, 1000, 0, 28.00, 26.00, 24.00, 22.00, 1, 280, 1),
-('中性笔黑色0.5mm 办公签字笔 12支装', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, '顺滑书写，不易断墨，适合日常办公签字使用。', '0.5mm / 12支', 1, 500, 1, 15.00, 14.00, 13.00, 12.00, 0, NULL, 2),
-('无线蓝牙鼠标 静音办公 可充电', 'https://img.yzcdn.cn/vant/cat.jpeg', '["https://img.yzcdn.cn/vant/cat.jpeg"]', '2.4G无线连接，静音按键设计，内置锂电池可充电使用，人体工学设计。', '无线蓝牙', 2, 200, 1, 89.00, 85.00, 80.00, 75.00, 1, 890, 1),
-('机械键盘 青轴104键 办公游戏两用', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, '青轴机械键盘，104键全尺寸，打字手感清脆，RGB背光可调。', '青轴 / 104键', 2, 150, 0, 199.00, 189.00, 179.00, 169.00, 0, NULL, 2),
-('防护手套 乳胶手套 一次性 100只装', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, '医用级乳胶材质，弹性好，贴合手型，适用于清洁、防护等场景。', '乳胶 / 100只', 3, 800, 1, 35.00, 32.00, 30.00, 28.00, 1, 350, 1),
-('安全帽 ABS材质 防砸防撞 工地施工', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, 'ABS工程塑料材质，防砸防撞，符合国家安全标准，适用于工地施工。', 'ABS材质', 3, 300, 0, 45.00, 42.00, 40.00, 38.00, 0, NULL, 2);
+INSERT INTO `goods` (`name`, `image`, `images`, `image_width`, `image_height`, `image_aspect_ratio`, `description`, `spec`, `category_id`, `stock`, `show_stock`, `price1`, `price2`, `price3`, `price4`, `support_points`, `points_price`, `sort_order`) VALUES
+('A4打印纸 70g 500张/包 办公用纸', 'https://img.yzcdn.cn/vant/cat.jpeg', '["https://img.yzcdn.cn/vant/cat.jpeg", "https://img.yzcdn.cn/vant/cat.jpeg"]', 450, 450, 1.0000, '高品质A4打印纸，70g加厚设计，不易卡纸，打印清晰，适用于各类打印机、复印机。每包500张，经济实惠。', '70g / 500张/包', 1, 1000, 0, 28.00, 26.00, 24.00, 22.00, 1, 280, 1),
+('中性笔黑色0.5mm 办公签字笔 12支装', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, 450, 600, 0.7500, '顺滑书写，不易断墨，适合日常办公签字使用。', '0.5mm / 12支', 1, 500, 1, 15.00, 14.00, 13.00, 12.00, 0, NULL, 2),
+('无线蓝牙鼠标 静音办公 可充电', 'https://img.yzcdn.cn/vant/cat.jpeg', '["https://img.yzcdn.cn/vant/cat.jpeg"]', 450, 338, 1.3314, '2.4G无线连接，静音按键设计，内置锂电池可充电使用，人体工学设计。', '无线蓝牙', 2, 200, 1, 89.00, 85.00, 80.00, 75.00, 1, 890, 1),
+('机械键盘 青轴104键 办公游戏两用', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, 450, 300, 1.5000, '青轴机械键盘，104键全尺寸，打字手感清脆，RGB背光可调。', '青轴 / 104键', 2, 150, 0, 199.00, 189.00, 179.00, 169.00, 0, NULL, 2),
+('防护手套 乳胶手套 一次性 100只装', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, 450, 500, 0.9000, '医用级乳胶材质，弹性好，贴合手型，适用于清洁、防护等场景。', '乳胶 / 100只', 3, 800, 1, 35.00, 32.00, 30.00, 28.00, 1, 350, 1),
+('安全帽 ABS材质 防砸防撞 工地施工', 'https://img.yzcdn.cn/vant/cat.jpeg', NULL, 450, 400, 1.1250, 'ABS工程塑料材质，防砸防撞，符合国家安全标准，适用于工地施工。', 'ABS材质', 3, 300, 0, 45.00, 42.00, 40.00, 38.00, 0, NULL, 2);

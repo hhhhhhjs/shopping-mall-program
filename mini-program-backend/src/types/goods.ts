@@ -21,6 +21,12 @@ export interface GoodsItem {
   image: string
   /** 商品图片列表（轮播图），始终返回数组 */
   images: string[]
+  /** 商品主图宽度（处理后，固定450px） */
+  imageWidth: number
+  /** 商品主图高度（处理后，按比例缩放） */
+  imageHeight: number
+  /** 商品主图宽高比（width / height） */
+  imageAspectRatio: number
   /** 商品简介 */
   description?: string | null
   /** 商品规格/型号 */
@@ -91,6 +97,9 @@ export interface GoodsRecord {
   name: string
   image: string
   images: string | string[] | null  // mysql2 可能自动解析 JSON 为数组
+  image_width: number | null
+  image_height: number | null
+  image_aspect_ratio: number | null
   description: string | null
   spec: string | null
   category_id: number
@@ -107,6 +116,30 @@ export interface GoodsRecord {
   sort_order: number
   created_at: string
   updated_at: string
+}
+
+/** 图片上传结果 */
+export interface ImageUploadResult {
+  /** 图片URL */
+  url: string
+  /** 图片宽度 */
+  width: number
+  /** 图片高度 */
+  height: number
+  /** 宽高比 */
+  aspectRatio: number
+  /** 原始文件名 */
+  originalName: string
+}
+
+/** 批量图片上传请求 */
+export interface BatchImageUploadRequest {
+  images: Array<{
+    file: Buffer
+    originalName: string
+    width?: number
+    height?: number
+  }>
 }
 
 /** 数据库分类记录（蛇形命名） */

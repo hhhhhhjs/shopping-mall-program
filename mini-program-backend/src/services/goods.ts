@@ -41,11 +41,19 @@ function parseImages(images: string | string[] | null): string[] {
  * 将数据库记录转换为前端格式
  */
 function transformGoodsRecord(record: GoodsRecord): GoodsItem {
+  // 默认图片尺寸（如果数据库中没有存储）
+  const defaultWidth = 450
+  const defaultHeight = 450
+  const defaultAspectRatio = 1
+
   return {
     id: record.id,
     name: record.name,
     image: record.image,
     images: parseImages(record.images),
+    imageWidth: record.image_width || defaultWidth,
+    imageHeight: record.image_height || defaultHeight,
+    imageAspectRatio: record.image_aspect_ratio || defaultAspectRatio,
     description: record.description,
     spec: record.spec,
     categoryId: record.category_id,
@@ -162,7 +170,9 @@ export async function getGoodsList(
   // 查询列表
   const listSql = `
     SELECT 
-      g.id, g.name, g.image, g.images, g.description, g.spec,
+      g.id, g.name, g.image, g.images, 
+      g.image_width, g.image_height, g.image_aspect_ratio,
+      g.description, g.spec,
       g.category_id, c.name as category_name,
       g.stock, g.show_stock,
       g.price1, g.price2, g.price3, g.price4,
@@ -209,7 +219,9 @@ export async function getGoodsList(
 export async function getGoodsDetail(goodsId: number, userId?: number): Promise<GoodsItem | null> {
   const sql = `
     SELECT 
-      g.id, g.name, g.image, g.images, g.description, g.spec,
+      g.id, g.name, g.image, g.images,
+      g.image_width, g.image_height, g.image_aspect_ratio,
+      g.description, g.spec,
       g.category_id, c.name as category_name,
       g.stock, g.show_stock,
       g.price1, g.price2, g.price3, g.price4,
@@ -297,7 +309,9 @@ export async function getUserFavorites(
   // 查询列表
   const listSql = `
     SELECT 
-      g.id, g.name, g.image, g.images, g.description, g.spec,
+      g.id, g.name, g.image, g.images,
+      g.image_width, g.image_height, g.image_aspect_ratio,
+      g.description, g.spec,
       g.category_id, c.name as category_name,
       g.stock, g.show_stock,
       g.price1, g.price2, g.price3, g.price4,
